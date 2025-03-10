@@ -16,10 +16,6 @@ st.write(
 )
 
 
-# WCAG 2.1
-principles = ['Principle 1: Perceivable', 'Principle 2: Operable', 'Principle 3: Understandable', 'Principle 4: Robust']
-
-
 # Obtener las configuraciones de las versiones wcag soportadas
 @st.cache_resource
 def get_config_toml_wcag():
@@ -48,7 +44,7 @@ def get_geocode(ciudad:str):
     r = requests.get(url)
     result = r.text.replace('callback(', '')[:-1]
     result = json.loads(result)
-    print(result)
+    #print(result)
     return result or None
 
 
@@ -168,11 +164,36 @@ st.bar_chart(
 )
 
 
-
 dataframe_geo = pd.DataFrame({
     'ciudad' : selected_cities,
     'lat': selected_lats,
     'lon': selected_lons })
 
-st.map(dataframe_geo, size = 50)
+#st.map(dataframe_geo, size = 50)
+
+import pydeck as pdk
+st.pydeck_chart(
+    pdk.Deck(
+        map_style=None,
+        initial_view_state=pdk.ViewState(
+            latitude=40.41,
+            longitude=-3.70,
+            zoom=4,
+        ),
+        layers=[
+
+            pdk.Layer(
+                "ScatterplotLayer",
+                data=dataframe_geo,
+                get_position="[lon, lat]",
+                get_color="[100, 30, 0, 160]",
+                get_radius=15000,
+            ),
+        ],
+    )
+)
+
+
+
+
 
