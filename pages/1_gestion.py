@@ -1,50 +1,48 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
+import os
 
 
-df = pd.DataFrame(
-    [
-        {"command": "st.selectbox", "rating": 4, "is_widget": True},
-        {"command": "st.balloons", "rating": 5, "is_widget": False},
-        {"command": "st.time_input", "rating": 3, "is_widget": True},
-    ]
-)
+upload_file = st.file_uploader("Elige un fichero para subirlo a la aplicación")
 
-edited_df = st.data_editor(df) # 👈 An editable dataframe
+if upload_file is not None:
 
-favorite_command = edited_df.loc[edited_df["rating"].idxmax()]["command"]
-st.markdown(f"Your favorite command is **{favorite_command}** 🎈")
+    with open(os.path.join("./data/raw/",upload_file.name),"wb") as f: 
+          f.write(upload_file.getbuffer())  
 
-st.title('Uber pickups in NYC')
+    st.success("Fichero Almacenado")
 
-DATE_COLUMN = 'date/time'
-DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
-            'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
+col1, col2 = st.columns(2)
 
-@st.cache_data
-def load_data(nrows):
-    data = pd.read_csv(DATA_URL, nrows=nrows)
-    lowercase = lambda x: str(x).lower()
-    data.rename(lowercase, axis='columns', inplace=True)
-    data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
-    return data
+path_raw= "./data/raw/"
+path_formatted= "./data/formatted/"
 
-data_load_state = st.text('Loading data...')
-data = load_data(10000)
-data_load_state.text("Done! (using st.cache_data)")
+with col1:
+    st.header("Ficheros en bruto")
+    for index, element in enumerate(os.listdir(path_raw)):
+        st.checkbox(path_raw + element, key='dynamic_checkbox_raw_' + str(index))
 
-if st.checkbox('Show raw data'):
-    st.subheader('Raw data')
-    st.write(data)
+with col2:
+    st.header("Ficheros saneados")
+    for index, element in enumerate(os.listdir(path_formatted)):
+        st.checkbox(path_formatted + element, key='dynamic_checkbox_formatted_' + str(index))
 
-st.subheader('Number of pickups by hour')
-hist_values = np.histogram(data[DATE_COLUMN].dt.hour, bins=24, range=(0,24))[0]
-st.bar_chart(hist_values)
 
-# Some number in the range 0-23
-hour_to_filter = st.slider('hour', 0, 23, 17)
-filtered_data = data[data[DATE_COLUMN].dt.hour == hour_to_filter]
 
-st.subheader('Map of all pickups at %s:00' % hour_to_filter)
-st.map(filtered_data)
+delete_button = st.button("Borra los ficheros seleccionados")
+
+if delete_button:
+    for index, element in enumerate(os.listdir(path_raw)):
+        name = 'dynamic_checkbox_raw_' + str(index)
+
+        if st.session_state[name] is True:
+            os.unlink(path_raw + element)
+            st.write( f"Borrado fichero {path_raw + element }")
+            
+
+
+    for index, element in enumerate(os.listdir(path_formatted)):
+        name = 'dynamic_checkbox_formatted_' + str(index)
+
+        if st.session_state[name] is True:
+            os.unlink(path_formatted + element)
+            st.write( f"Borrado fichero {path_formatted + element }")

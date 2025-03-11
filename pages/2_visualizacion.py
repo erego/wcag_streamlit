@@ -1,3 +1,6 @@
+from pathlib import Path
+
+
 import streamlit as st
 import pandas as pd
 import tomllib
@@ -27,12 +30,12 @@ def get_config_toml_wcag():
 
 @st.cache_data
 def get_wcag_data():
-    data_wcag = pd.read_excel("../../data/WCAG_ayuntamientos_formatted.xlsx", index_col = 0)
+    data_wcag = pd.read_excel("./data/formatted/WCAG_ayuntamientos_formatted.xlsx", index_col = 0)
     return data_wcag
 
 @st.cache_data
 def get_wcag_cities():
-    data_wcag = pd.read_excel("../../data/WCAG_ayuntamientos_formatted.xlsx")
+    data_wcag = pd.read_excel("./data/formatted/WCAG_ayuntamientos_formatted.xlsx")
     cities = data_wcag.columns.values.tolist()[3:]
     cities.sort()
     return cities
