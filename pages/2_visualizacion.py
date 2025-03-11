@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import os
 
 import streamlit as st
 import pandas as pd
@@ -29,8 +29,8 @@ def get_config_toml_wcag():
 
 
 @st.cache_data
-def get_wcag_data():
-    data_wcag = pd.read_excel("./data/formatted/WCAG_ayuntamientos_formatted.xlsx", index_col = 0)
+def get_wcag_data(select_fichero):
+    data_wcag = pd.read_excel(select_fichero, index_col = 0)
     return data_wcag
 
 @st.cache_data
@@ -84,117 +84,134 @@ def get_statistics_data(data_wcag_subtable):
 def get_principles(version_wcag, configs_wcag):
     filtered_principles = [config_wcag['principles'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
     return filtered_principles
-    
-   
-data_wcag_subtable = get_wcag_data()
-
-configs_wcag = get_config_toml_wcag()
-versions_wcag = []
-for version_wcag in configs_wcag:
-    versions_wcag.append(version_wcag['version'])
-
-# Anclamos los desplegables al lateral
-select_wcag_versions = st.sidebar.selectbox("Elige la versión wcag a analizar", versions_wcag)
-
-
-if select_wcag_versions:
-    principles_version = get_principles(select_wcag_versions, configs_wcag)
-    select_principles = st.sidebar.multiselect("Elige los principios", principles_version,)
-
-all_cities = get_wcag_cities()
-select_cities = st.sidebar.multiselect(
-    "Elige las ciudades", all_cities, 
-)
 
 
 
-if select_cities:
-    data_wcag_subtable = data_wcag_subtable.loc[:,["Sucess_Criterion", "Principles_Guidelines"] + select_cities]
-    selected_cities = select_cities
-else:
-    selected_cities = all_cities
+path_formatted= "./data/formatted/"
+
+lst_ficheros = [path_formatted + element for element in os.listdir(path_formatted)]
+
+select_fichero = st.selectbox("Elige el fichero con el que trabajar",lst_ficheros,index=None)
+
+ 
+
+if select_fichero:
+
+    data_wcag_subtable = get_wcag_data(select_fichero)
+
+    configs_wcag = get_config_toml_wcag()
+    versions_wcag = []
+    for version_wcag in configs_wcag:
+        versions_wcag.append(version_wcag['version'])
+
+    # Anclamos los desplegables al lateral
+    select_wcag_versions = st.sidebar.selectbox("Elige la versión wcag a analizar", versions_wcag)
 
 
-selected_lats = []
-selected_lons = []
+    if select_wcag_versions:
+        principles_version = get_principles(select_wcag_versions, configs_wcag)
+        select_principles = st.sidebar.multiselect("Elige los principios", principles_version,)
 
-for city in selected_cities:
-    data = get_geocode(city)
-    if data is None:
-        selected_lats.append(0)
-        selected_lons.append(0)
-    else:
-        selected_lats.append(data["lat"])
-        selected_lons.append(data["lng"])
-
-if select_principles:
-    # Número del principio elegido
-    lst_num_principles = []
-    for select_principle in select_principles:
-        lst_num_principles.append(select_principle)
-        lst_num_principles.append(select_principle[10:11])
+    all_cities = get_wcag_cities()
 
 
-    result = data_wcag_subtable.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(tuple(lst_num_principles))
-    data_wcag_subtable = data_wcag_subtable[result]
-   
-st.dataframe(data_wcag_subtable)
-
-
-st.markdown("# Informe de calidad de los datos")
-st.write(
-    """Esta sección permite visualizar caraterísticas de los datos """
-)
-
-data_wcag_subtable_statistics = get_statistics_data(data_wcag_subtable)
-
-st.dataframe(data_wcag_subtable_statistics) 
-
-st.bar_chart(
-    data_wcag_subtable_statistics,
-    y=["Valor máximo"],
-    color=["#d2c5dc"],  
-)
-st.bar_chart(
-    data_wcag_subtable_statistics,
-    y=["Valor mínimo"],
-    color=["#e5e0b7"],  
-)
-st.bar_chart(
-    data_wcag_subtable_statistics,
-    y=["Cardinalidad"],
-    color=["#f9dfd6"],  
-)
-
-
-dataframe_geo = pd.DataFrame({
-    'ciudad' : selected_cities,
-    'lat': selected_lats,
-    'lon': selected_lons })
-
-#st.map(dataframe_geo, size = 50)
-
-import pydeck as pdk
-st.pydeck_chart(
-    pdk.Deck(
-        map_style=None,
-        initial_view_state=pdk.ViewState(
-            latitude=40.41,
-            longitude=-3.70,
-            zoom=4,
-        ),
-        layers=[
-
-            pdk.Layer(
-                "ScatterplotLayer",
-                data=dataframe_geo,
-                get_position="[lon, lat]",
-                get_color="[100, 30, 0, 160]",
-                get_radius=15000,
-            ),
-        ],
+    select_cities = st.sidebar.multiselect(
+        "Elige las ciudades", all_cities, 
     )
-)
+
+    if select_cities:
+        data_wcag_subtable = data_wcag_subtable.loc[:,["Sucess_Criterion", "Principles_Guidelines"] + select_cities]
+        selected_cities = select_cities
+    else:
+        selected_cities = all_cities
+
+
+    selected_lats = []
+    selected_lons = []
+
+    for city in selected_cities:
+        data = get_geocode(city)
+        if data is None:
+            selected_lats.append(0)
+            selected_lons.append(0)
+        else:
+            selected_lats.append(data["lat"])
+            selected_lons.append(data["lng"])
+
+    if select_principles:
+        # Número del principio elegido
+        lst_num_principles = []
+        for select_principle in select_principles:
+            lst_num_principles.append(select_principle)
+            lst_num_principles.append(select_principle[10:11])
+
+
+        result = data_wcag_subtable.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(tuple(lst_num_principles))
+        data_wcag_subtable = data_wcag_subtable[result]
+
+
+
+
+
+
+
+    st.dataframe(data_wcag_subtable)
+
+
+    st.markdown("# Informe de calidad de los datos")
+    st.write(
+        """Esta sección permite visualizar caraterísticas de los datos """
+    )
+
+    data_wcag_subtable_statistics = get_statistics_data(data_wcag_subtable)
+
+    st.dataframe(data_wcag_subtable_statistics) 
+
+    st.bar_chart(
+        data_wcag_subtable_statistics,
+        y=["Valor máximo"],
+        color=["#d2c5dc"],  
+    )
+    st.bar_chart(
+        data_wcag_subtable_statistics,
+        y=["Valor mínimo"],
+        color=["#e5e0b7"],  
+    )
+    st.bar_chart(
+        data_wcag_subtable_statistics,
+        y=["Cardinalidad"],
+        color=["#f9dfd6"],  
+    )
+
+
+    dataframe_geo = pd.DataFrame({
+        'ciudad' : selected_cities,
+        'lat': selected_lats,
+        'lon': selected_lons })
+
+    #st.map(dataframe_geo, size = 50)
+
+    import pydeck as pdk
+    st.pydeck_chart(
+        pdk.Deck(
+            map_style=None,
+            initial_view_state=pdk.ViewState(
+                latitude=40.41,
+                longitude=-3.70,
+                zoom=4,
+            ),
+            layers=[
+
+                pdk.Layer(
+                    "ScatterplotLayer",
+                    data=dataframe_geo,
+                    get_position="[lon, lat]",
+                    get_color="[100, 30, 0, 160]",
+                    get_radius=15000,
+                ),
+            ],
+        )
+    )
 
 
 
