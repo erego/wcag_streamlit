@@ -151,10 +151,6 @@ if select_fichero:
 
 
 
-
-
-
-
     st.dataframe(data_wcag_subtable)
 
 
