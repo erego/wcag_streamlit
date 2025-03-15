@@ -4,6 +4,14 @@ import tomllib
 import pathlib
 import pandas as pd
 
+st.set_page_config(page_title="Gestión de ficheros", page_icon=":file", layout="wide")
+st.sidebar.header("Gestión de ficheros")
+
+col1, col2, col3 = st.columns(3)
+with col3:
+    st.image("./static/logouned.png")
+
+
 # Obtener las configuraciones de las versiones wcag soportadas
 @st.cache_resource
 def get_config_toml_wcag():

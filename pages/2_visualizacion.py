@@ -12,6 +12,11 @@ import json
 
 st.set_page_config(page_title="Visualización de datos", page_icon="📊", layout="wide")
 
+col1, col2, col3 = st.columns(3)
+with col3:
+    st.image("./static/logouned.png")
+
+
 st.markdown("# Visualización de datos")
 st.sidebar.header("Visualización de datos")
 st.write(

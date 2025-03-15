@@ -1,3 +1,6 @@
+[server]
+enableStaticServing = true
+
 [[wcag]]
 version="2.1"
 principles = ['Principle 1: Perceivable', 'Principle 2: Operable', 'Principle 3: Understandable', 'Principle 4: Robust']
@@ -22,3 +25,5 @@ success_criterion = ['1.1.1: Non-text Content', '1.2.1: Audio-only and Video-onl
 
 [[wcag]]
 version="2.2"
+
+

@@ -3,7 +3,12 @@ import streamlit as st
 st.set_page_config(
     page_title="Aplicación de análisis de accesibilidad wcag de la UNED",
     page_icon="👋",
+    layout="wide"
 )
+
+col1, col2, col3 = st.columns(3)
+with col3:
+    st.image("./static/logouned.png")
 
 st.write("# Bienvenido al dashboard para la gestión de auditorías de accesibilidad web de la UNED")
 
@@ -24,3 +29,6 @@ st.markdown(
     
 """
 )
+
+
+
