@@ -13,7 +13,7 @@ import tomllib
 import sqlite3
 
 
-from wcag.data_api.data_operations import get_geocode, get_city_data, insert_city_db
+from data_api.data_operations import get_geocode, get_city_data, insert_city_db
 
 st.markdown("## Visualización de datos")
 st.sidebar.header("Visualización de datos")
