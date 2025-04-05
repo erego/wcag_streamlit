@@ -3,28 +3,24 @@ import os
 
 import streamlit as st
 import pandas as pd
-import tomllib
+
 
 import altair as alt
 import urllib
 import requests
 import json
-
-#st.set_page_config(page_title="Visualización de datos", page_icon="📊", layout="wide")
-
-col1, col2, col3 = st.columns(3)
-with col3:
-    st.image("./static/logouned.png")
+import tomllib
+import sqlite3
 
 
-st.markdown("# Visualización de datos")
+from wcag.data_api.data_operations import get_geocode, get_city_data, insert_city_db
+
+st.markdown("## Visualización de datos")
 st.sidebar.header("Visualización de datos")
 st.write(
     """Esta página permite filtrar y visualizar la tabla de WCAG de ayuntamientos"""
 )
 
-
-# Obtener las configuraciones de las versiones wcag soportadas
 @st.cache_resource
 def get_config_toml_wcag():
     with open('custom.toml', 'rb') as file:
@@ -44,16 +40,6 @@ def get_wcag_cities():
     cities = data_wcag.columns.values.tolist()[3:]
     cities.sort()
     return cities
-
-@st.cache_data
-def get_geocode(ciudad:str):
-    ciudad = urllib.parse.quote(ciudad)
-    url = f'http://www.cartociudad.es/geocoder/api/geocoder/findJsonp?q={ciudad}'
-    r = requests.get(url)
-    result = r.text.replace('callback(', '')[:-1]
-    result = json.loads(result)
-    #print(result)
-    return result or None
 
 
 def get_statistics_data(data_wcag_subtable):
@@ -134,14 +120,44 @@ if select_fichero:
     selected_lats = []
     selected_lons = []
 
+    conn = sqlite3.connect('./data/database/dashboard.db')
+    
+
     for city in selected_cities:
-        data = get_geocode(city)
-        if data is None:
-            selected_lats.append(0)
-            selected_lons.append(0)
+
+        
+        # Comprobamos si la ciudad está en la base de datos y si no llamamos al api
+
+        result_db = get_city_data(city, conn)
+
+        if len(result_db) ==1 :
+            lat = result_db[0][0]
+            lon = result_db[0][1]
+            status = result_db[0][2]
+        
         else:
-            selected_lats.append(data["lat"])
-            selected_lons.append(data["lng"])
+
+            data = get_geocode(city)
+            
+            if data is None:
+                print("data", data)
+                print("city", city)
+                lat = 0
+                lon = 0
+                status = False
+
+            else:
+                lat = data["lat"]
+                lon = data["lng"]
+                status = True
+
+            # Insertamos en la base de datos porque no existe
+            insert_city_db(city, lat, lon, status, conn)
+
+        selected_lats.append(lat)
+        selected_lons.append(lon)       
+
+    conn.close()
 
     if select_principles:
         # Número del principio elegido

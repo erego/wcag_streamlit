@@ -1,11 +1,7 @@
 import streamlit as st
 
 
-col1, col2, col3 = st.columns(3)
-with col3:
-    st.image("./static/logouned.png")
-
-st.write("# Bienvenido al dashboard para la gestión de auditorías de accesibilidad web de la UNED")
+st.write("## Bienvenido al dashboard para la gestión de auditorías de accesibilidad web de la UNED")
 
 
 st.markdown(
