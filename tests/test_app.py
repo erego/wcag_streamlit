@@ -1,7 +1,6 @@
 import sqlite3
 import pytest
 
-
 from wcag.data_api.data_operations import get_geocode, get_city_data
 
 
@@ -99,5 +98,9 @@ def test_city_database():
 
     cur.close()    
          
+
+
+
+
 
       

@@ -3,6 +3,7 @@ import os
 import pathlib
 import pandas as pd
 import tomllib
+from difflib import SequenceMatcher as SM
 
 #st.set_page_config(page_title="Gestión de ficheros", page_icon=":file", layout="wide")
 st.markdown("## Gestión de ficheros")
@@ -104,7 +105,7 @@ with st.form("form_limpieza"):
         - Se eliminan las filas que son todo NA(filas en blanco), ya que no aportan valor
         - Se renombran las primeras dos columnas vacías por otros nombres más significativos como son: Sucess_Criterion y Principles_Guidelines
         - Se incluyen las guidelines  en las filas del dataframe pues no vienen incluidas
-
+        - Se actualizan los textos de los criterios de éxito para que conincidan con los oficiales
     """)
 
 
@@ -160,6 +161,46 @@ if clean_button:
         row_to_add = pd.DataFrame({"Principles_Guidelines": guideline}, index=[index_found])
         data_wcag = pd.concat([data_wcag.iloc[:index_found], row_to_add, data_wcag.iloc[index_found:]]).reset_index(drop=True)
     
+    # Vamos a actualizar la tabla con la versión de wcag con la que sea compatible
+    
+    configs_wcag == get_config_toml_wcag()
+
+    data_wcag_subtable = data_wcag.loc[:,["Sucess_Criterion", "Principles_Guidelines"]] 
+    data_wcag_subtable = data_wcag_subtable.dropna()
+    data_wcag_subtable = data_wcag_subtable["Principles_Guidelines"]
+    data_wcag_subtable = data_wcag_subtable.reset_index(drop=True)
+    num_criterions_table = data_wcag_subtable.shape[0]
+
+    for version_wcag in configs_wcag:
+
+        version_to_test = version_wcag
+        criterions_to_check = version_to_test['success_criterion']    
+
+        
+        num_criterions_config = len(criterions_to_check)
+        if num_criterions_table == num_criterions_config:
+            break
+
+    for index, value in data_wcag_subtable.items():
+        # Get element index from list of criterion
+        criterion_to_check = criterions_to_check[index].strip()
+        excel_criterion = value.strip()
+
+        if criterion_to_check != excel_criterion:
+
+            if excel_criterion in criterion_to_check:
+                data_wcag.loc[data_wcag['Principles_Guidelines'] == value, 'Principles_Guidelines'] = criterion_to_check
+
+            else:
+                similitud = SM(None, criterion_to_check, value.strip()).ratio()
+                
+                if similitud < 0.75:
+                    found_criterions = False         
+                    error+= 1
+                else:
+                    data_wcag.loc[data_wcag['Principles_Guidelines'] == value, 'Principles_Guidelines'] = criterion_to_check
+
+
     path = pathlib.Path(select_fichero)
 
     new_name = path.stem + "_formatted" + path.suffix
