@@ -3,30 +3,19 @@ import os
 
 import streamlit as st
 import pandas as pd
-
-
 import altair as alt
-import urllib
-import requests
-import json
-import tomllib
+
 import sqlite3
 
 
 from data_api.data_operations import get_geocode, get_city_data, insert_city_db
+from data_api.wcag_operations import get_config_toml_wcag, get_principles
 
 st.markdown("## Visualización de datos")
 st.sidebar.header("Visualización de datos")
 st.write(
     """Esta página permite filtrar y visualizar la tabla de WCAG de ayuntamientos"""
 )
-
-@st.cache_resource
-def get_config_toml_wcag():
-    with open('custom.toml', 'rb') as file:
-        config = tomllib.load(file)
-        versions_wcag = config['wcag']
-    return versions_wcag
 
 
 @st.cache_data
@@ -72,10 +61,12 @@ def get_statistics_data(data_wcag_subtable):
      
     return result_statistics
 
-def get_principles(version_wcag, configs_wcag):
-    filtered_principles = [config_wcag['principles'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
-    return filtered_principles
 
+
+
+
+if 'versions_wcag' not in st.session_state:
+    st.session_state['versions_wcag'] = get_config_toml_wcag()
 
 
 path_formatted= "./data/formatted/"
@@ -90,7 +81,7 @@ if select_fichero:
 
     data_wcag_subtable = get_wcag_data(select_fichero)
 
-    configs_wcag = get_config_toml_wcag()
+    configs_wcag = st.session_state['versions_wcag'] 
     versions_wcag = []
     for version_wcag in configs_wcag:
         versions_wcag.append(version_wcag['version'])
@@ -124,10 +115,8 @@ if select_fichero:
     
 
     for city in selected_cities:
-
-        
+      
         # Comprobamos si la ciudad está en la base de datos y si no llamamos al api
-
         result_db = get_city_data(city, conn)
 
         if len(result_db) ==1 :
