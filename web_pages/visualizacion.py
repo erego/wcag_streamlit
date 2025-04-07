@@ -11,7 +11,7 @@ import sqlite3
 from data_api.data_operations import get_geocode, get_city_data, insert_city_db
 from data_api.wcag_operations import get_config_toml_wcag, get_principles
 
-st.markdown("## Visualización de datos")
+st.header("Visualización de datos", anchor = False)
 st.sidebar.header("Visualización de datos")
 st.write(
     """Esta página permite filtrar y visualizar la tabla de WCAG de ayuntamientos"""
@@ -54,15 +54,18 @@ def get_statistics_data(data_wcag_subtable):
     cardinalidad_serie = data_wcag_subtable_statistics.nunique()
     cardinalidad_serie.name = 'Cardinalidad'
 
-    moda_serie = data_wcag_subtable_statistics.mode(axis = 0).transpose().fillna('').astype(str).apply(','.join, axis=1)
-    moda_serie.name = 'Moda'
+    #moda_serie = data_wcag_subtable_statistics.mode(axis = 0).transpose().fillna('').astype(str).apply(','.join, axis=1)
+    #moda_serie.name = 'Moda'
 
-    result_statistics = pd.concat([total_valores_serie, max_serie, min_serie, valores_nulos_serie, cardinalidad_serie, moda_serie], axis = 1)
+    mean_serie = data_wcag_subtable_statistics.mean(axis = 0)
+    mean_serie.name = 'Media'
+
+    median_serie = data_wcag_subtable_statistics.mean(axis = 0)
+    median_serie.name = 'Mediana'
+
+    result_statistics = pd.concat([total_valores_serie, max_serie, min_serie, valores_nulos_serie, cardinalidad_serie, mean_serie, median_serie], axis = 1)
      
     return result_statistics
-
-
-
 
 
 if 'versions_wcag' not in st.session_state:

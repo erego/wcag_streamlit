@@ -6,7 +6,7 @@ import tomllib
 from difflib import SequenceMatcher as SM
 
 #st.set_page_config(page_title="Gestión de ficheros", page_icon=":file", layout="wide")
-st.markdown("## Gestión de ficheros")
+st.header("Gestión de ficheros", anchor=False)
 st.sidebar.header("Gestión de ficheros")
 
 # Obtener las configuraciones de las versiones wcag soportadas

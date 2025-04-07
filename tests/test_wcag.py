@@ -1,6 +1,14 @@
 import pandas as pd
 from difflib import SequenceMatcher as SM
-from wcag.data_api.wcag_operations import get_config_toml_wcag, get_principles
+from wcag.data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability
+
+
+def test_check_version_compatible():
+
+    version_compatible = get_best_wcag_compability('./tests/WCAG_ayuntamientos_formatted.xlsx')
+    
+    assert version_compatible == '2.2'
+
 
 def test_wcag_adjust():
 
