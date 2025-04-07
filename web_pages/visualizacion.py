@@ -11,7 +11,7 @@ import sqlite3
 from data_api.data_operations import get_geocode, get_city_data, insert_city_db
 from data_api.wcag_operations import get_config_toml_wcag, get_principles
 
-st.header("Visualización de datos", anchor = False)
+st.subheader("Visualización de datos", anchor=False)
 st.sidebar.header("Visualización de datos")
 st.write(
     """Esta página permite filtrar y visualizar la tabla de WCAG de ayuntamientos"""

@@ -6,7 +6,7 @@ import tomllib
 from difflib import SequenceMatcher as SM
 
 #st.set_page_config(page_title="Gestión de ficheros", page_icon=":file", layout="wide")
-st.header("Gestión de ficheros", anchor=False)
+st.subheader("Gestión de ficheros", anchor=False)
 st.sidebar.header("Gestión de ficheros")
 
 # Obtener las configuraciones de las versiones wcag soportadas
@@ -50,12 +50,12 @@ def form_callback():
 
 
 with col1:
-        st.header("Ficheros en bruto")
+        st.subheader("Ficheros en bruto", anchor=False)
         for index, element in enumerate(os.listdir(path_raw)):
             st.checkbox(path_raw + element, key='dynamic_checkbox_raw_' + str(index))
 
 with col2:
-    st.header("Ficheros saneados")
+    st.subheader("Ficheros saneados", anchor=False)
     for index, element in enumerate(os.listdir(path_formatted)):
         st.checkbox(path_formatted + element, key='dynamic_checkbox_formatted_' + str(index))
             
@@ -89,7 +89,7 @@ def get_success_criterion(version_wcag, configs_wcag):
 
 
 with st.form("form_limpieza"):
-    st.header("Limpieza inicial")
+    st.subheader("Limpieza inicial", anchor=False)
     st.markdown(
         """
         En esta sección se puede hacer una limpieza inicial básica de los datos en bruto del fichero seleccionado, teniendo en cuenta el formato en el que llega.

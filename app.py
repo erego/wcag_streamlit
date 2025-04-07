@@ -10,10 +10,10 @@ st.set_page_config(
 col1, col2 = st.columns([0.7, 0.3])
 
 with col1:
-    st.write("# Dashboard de accesibilidad web de la UNED")
+    st.header("Dashboard de accesibilidad web de la UNED", anchor=False)
 
 with col2:
-    st.image("./static/logouned.png")
+    st.image("./static/logouned.png", caption='Logo de la UNED')
 
 
 pagina_inicio = st.Page("./web_pages/init.py", title= "Inicio")
