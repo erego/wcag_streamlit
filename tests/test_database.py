@@ -28,8 +28,6 @@ def test_file_database():
 
     cur.close()    
 
-
-
 def test_city_database_wrong():
 
     """

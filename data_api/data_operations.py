@@ -33,6 +33,19 @@ def get_city_data(city: str, connection):
     cur.close()
     return result
 
+def get_fichero_db(nombre:str, tipo:str, connection):
+    """Obtiene los datos de un fichero de la base de datos
+
+    Args:
+        nombre (str): Nombre del fichero
+        tipo (str): Tipo (si está en bruto o formateado)
+        connection (_type_): Conexión a la base de datos
+    """
+    cur = connection.cursor()
+    cur.execute("SELECT nombre, tipo, mejor_version FROM ficheros where nombre = :name and tipo = :type", {'name':nombre, 'type': tipo})
+    result = cur.fetchall()
+    cur.close()
+    return result
 
 def insert_fichero_db(nombre:str, tipo:str, mejor_version:str, connection):
     """Inserta un registro en la tabla ficheros
@@ -41,7 +54,7 @@ def insert_fichero_db(nombre:str, tipo:str, mejor_version:str, connection):
         nombre (str): Nombre del fichero
         tipo (str): Tipo (si está en bruto o formateado)
         mejor_version (str): Mejor versión de wcag que cumple el fichero
-        connection (_type_): Conexión a la base de datos_
+        connection (_type_): Conexión a la base de datos
     """
 
     cur = connection.cursor()
