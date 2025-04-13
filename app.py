@@ -1,5 +1,4 @@
 import streamlit as st
-import sqlite3
 
 st.set_page_config(
     page_title="Aplicación de análisis de accesibilidad wcag de la UNED",

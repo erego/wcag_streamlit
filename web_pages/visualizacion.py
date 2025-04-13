@@ -3,7 +3,6 @@ import os
 
 import streamlit as st
 import pandas as pd
-import altair as alt
 
 import sqlite3
 
@@ -24,8 +23,8 @@ def get_wcag_data(select_fichero):
     return data_wcag
 
 @st.cache_data
-def get_wcag_cities():
-    data_wcag = pd.read_excel("./data/formatted/WCAG_ayuntamientos_formatted.xlsx")
+def get_wcag_cities(select_fichero):
+    data_wcag = pd.read_excel(select_fichero)
     cities = data_wcag.columns.values.tolist()[3:]
     cities.sort()
     return cities
@@ -97,7 +96,7 @@ if select_fichero:
         principles_version = get_principles(select_wcag_versions, configs_wcag)
         select_principles = st.sidebar.multiselect("Elige los principios", principles_version,)
 
-    all_cities = get_wcag_cities()
+    all_cities = get_wcag_cities(select_fichero)
 
 
     select_cities = st.sidebar.multiselect(

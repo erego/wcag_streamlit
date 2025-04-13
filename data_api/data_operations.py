@@ -1,8 +1,6 @@
 import urllib
 import requests
 import json
-import sqlite3
-
 
 def get_geocode(ciudad:str):
     """Llamada a la api de cartociudad para obtener datos geográficos de la ciudad
