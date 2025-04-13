@@ -36,17 +36,39 @@ def get_city_data(city: str, connection):
     return result
 
 
-def create_city_db():
+def insert_fichero_db(nombre:str, tipo:str, mejor_version:str, connection):
+    """Inserta un registro en la tabla ficheros
 
-    """  Esta función crea la table de ciudades en caso de no existir
+    Args:
+        nombre (str): Nombre del fichero
+        tipo (str): Tipo (si está en bruto o formateado)
+        mejor_version (str): Mejor versión de wcag que cumple el fichero
+        connection (_type_): Conexión a la base de datos_
     """
 
-    # Crear tabla de ciudades si no existiese.
-    conn = sqlite3.connect('./data/database/dashboard.db')
-    c = conn.cursor()
-    c.execute('DROP TABLE  IF EXISTS ciudades;')
-    c.execute('CREATE TABLE IF NOT EXISTS ciudades (ciudad TEXT, latitud REAL, longitud REAL, status INTEGER);')
+    cur = connection.cursor()
+    cur.execute('CREATE TABLE IF NOT EXISTS ficheros (nombre TEXT, tipo TEXT, mejor_version TEXT);')
+    cur.execute("INSERT INTO ficheros(nombre, tipo, mejor_version) VALUES (:file, :type_file, :best_version)",
+                     {'file':nombre, 'type_file': tipo, 'best_version': mejor_version})
 
+    connection.commit()
+    cur.close()
+
+
+def delete_fichero_db(nombre:str, connection):
+    """Borra de la tabla ficheros registros
+
+    Args:
+        nombre (str): Nombre del fichero
+        connection (_type_): Conexión a la base de datos_
+    """
+
+    cur = connection.cursor()
+   
+    cur.execute("DELETE FROM ficheros WHERE nombre = :name", {'name':nombre})
+
+    connection.commit()
+    cur.close()
 
 
 def insert_city_db(city: str, lat: float, lon:float, status:bool, connection):
@@ -60,6 +82,7 @@ def insert_city_db(city: str, lat: float, lon:float, status:bool, connection):
         connection (_type_): Conexión a la base de datos
     """
     cur = connection.cursor()
+    cur.execute('CREATE TABLE IF NOT EXISTS ciudades (ciudad TEXT, latitud REAL, longitud REAL, status INTEGER);')
     cur.execute("INSERT INTO ciudades (ciudad, latitud, longitud, status) VALUES (:city, :lat, :lon, :status)",
                      {'city':city, 'lat': lat, 'lon': lon, 'status': status})
     

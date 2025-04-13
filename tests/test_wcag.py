@@ -1,39 +1,74 @@
 import pandas as pd
 from difflib import SequenceMatcher as SM
-from wcag.data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability, is_compatible_wcag_version
-import pytest
+from wcag.data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability_formattedfile, is_formattedfile_compatible_wcag_version, is_rawfile_compatible_wcag_version
 
 
 
-def test_check_version_compatible():
+def test_check_version_compatible_formattedfile():
 
     version_to_test = "2.1"
 
-    result = is_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
+    result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
 
     assert result is True
 
     version_to_test = "2.0"
 
-    result = is_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
+    result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
 
     assert result is True
 
     version_to_test = "2.2"
 
-    result = is_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
+    result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
 
     assert result is False
 
 
-def test_check_best_version_compatible():
 
-    version_compatible = get_best_wcag_compability('./tests/WCAG_ayuntamientos_formatted.xlsx')
+def test_check_version_compatible_rawfile():
+
+
+    data_wcag = pd.read_excel('./tests/Datos WCAG Ayuntamientos.xlsx')
+
+    num_columns = data_wcag.shape[1]
+    
+    # Borramos las dos últimas columnas pues son iguales a las dos primeras
+    data_wcag.drop(columns=[data_wcag.columns[num_columns-1],data_wcag.columns[num_columns-2]], inplace = True)
+
+    # Eliminamos las filas que son todo NA(filas en blanco)
+    data_wcag.dropna(how='all', inplace=True)
+    data_wcag.reset_index(drop=True, inplace=True)
+
+    # Renombramos las primeras dos columnas vacías por otros nombres más significativos
+    data_wcag.rename(columns = {data_wcag.columns[0]: 'Sucess_Criterion', data_wcag.columns[1]: 'Principles_Guidelines'}, inplace=True)
+
+    version_to_test = "2.1"
+
+    result = is_rawfile_compatible_wcag_version(data_wcag, version_to_test)
+
+    assert result is True
+
+    version_to_test = "2.0"
+
+    result = is_rawfile_compatible_wcag_version(data_wcag, version_to_test)
+
+    assert result is True
+
+    version_to_test = "2.2"
+
+    result = is_rawfile_compatible_wcag_version(data_wcag, version_to_test)
+
+    assert result is False
+
+def test_check_best_version_compatible_formattedfile():
+
+    version_compatible = get_best_wcag_compability_formattedfile('./tests/WCAG_ayuntamientos_formatted.xlsx')
     
     assert version_compatible == '2.1'
 
 
-def test_wcag_adjust():
+def test_wcag_adjust_formattedfile():
 
     data_wcag = pd.read_excel('./tests/WCAG_ayuntamientos_formatted.xlsx', index_col = 0)
 
@@ -49,7 +84,7 @@ def test_wcag_adjust():
             
             break
 
-    compatibility = is_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test["version"])
+    compatibility = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test["version"])
 
     assert compatibility is True
 

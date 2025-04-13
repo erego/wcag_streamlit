@@ -1,11 +1,13 @@
 import streamlit as st
 import os
+import sqlite3
 import pathlib
 import pandas as pd
 import tomllib
 from difflib import SequenceMatcher as SM
+from data_api.wcag_operations import get_best_wcag_compability_rawfile
+from data_api.data_operations import insert_fichero_db, delete_fichero_db
 
-#st.set_page_config(page_title="Gestión de ficheros", page_icon=":file", layout="wide")
 st.subheader("Gestión de ficheros", anchor=False)
 st.sidebar.header("Gestión de ficheros")
 
@@ -32,7 +34,7 @@ path_raw= "./data/raw/"
 path_formatted= "./data/formatted/"
 
 
-def form_callback():
+def form_callback_delete():
     for index, element in enumerate(os.listdir(path_raw)):
         name = 'dynamic_checkbox_raw_' + str(index)
 
@@ -48,30 +50,18 @@ def form_callback():
             os.unlink(path_formatted + element)
             st.write( f"Borrado fichero {path_formatted + element }")
 
-
-with col1:
-        st.subheader("Ficheros en bruto", anchor=False)
-        for index, element in enumerate(os.listdir(path_raw)):
-            st.checkbox(path_raw + element, key='dynamic_checkbox_raw_' + str(index))
-
-with col2:
-    st.subheader("Ficheros saneados", anchor=False)
-    for index, element in enumerate(os.listdir(path_formatted)):
-        st.checkbox(path_formatted + element, key='dynamic_checkbox_formatted_' + str(index))
+            conn = sqlite3.connect('./data/database/dashboard.db')
+            print(element)
+            delete_fichero_db(element, conn)
+            conn.close()
             
 
 with st.form("form_delete"):
       
-
-    delete_button = st.form_submit_button("Borra los ficheros seleccionados", on_click=form_callback)
-
+    delete_button = st.form_submit_button("Borra los ficheros seleccionados", on_click=form_callback_delete)
 
 
 configs_wcag = get_config_toml_wcag()
-versions_wcag = []
-for version_wcag in configs_wcag:
-    versions_wcag.append(version_wcag['version'])
-
 
 def get_principles(version_wcag, configs_wcag):
     filtered_principles = [config_wcag['principles'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
@@ -114,12 +104,7 @@ with st.form("form_limpieza"):
     lst_ficheros = [path_raw + element for element in os.listdir(path_raw)]
 
     select_fichero = st.selectbox("Elige el fichero con el que trabajar",lst_ficheros,index=None)
-
-
-    # Anclamos los desplegables al lateral
-    select_wcag_versions = st.selectbox("Elige la versión wcag", versions_wcag)
-
-     
+    
     clean_button = st.form_submit_button("Realiza la limpieza")
 
 
@@ -141,12 +126,13 @@ if clean_button:
 
     cities = data_wcag.columns.values.tolist()[2:]
     
-    
-    principles = get_principles(select_wcag_versions, configs_wcag)
+    best_version = get_best_wcag_compability_rawfile(data_wcag)
+ 
+    principles = get_principles(best_version, configs_wcag)
 
-    guidelines = get_guidelines(select_wcag_versions, configs_wcag)
+    guidelines = get_guidelines(best_version, configs_wcag)
 
-    success_criterion = get_success_criterion(select_wcag_versions, configs_wcag)
+    success_criterion = get_success_criterion(best_version, configs_wcag)
     
     # Vamos a insertar las guidelines en el dataframe original que no estaban incluidas
 
@@ -169,45 +155,80 @@ if clean_button:
     data_wcag_subtable = data_wcag_subtable.dropna()
     data_wcag_subtable = data_wcag_subtable["Principles_Guidelines"]
     data_wcag_subtable = data_wcag_subtable.reset_index(drop=True)
-    num_criterions_table = data_wcag_subtable.shape[0]
 
+    data_wcag_criterions = data_wcag_subtable.tolist()
+    
     for version_wcag in configs_wcag:
 
-        version_to_test = version_wcag
-        criterions_to_check = version_to_test['success_criterion']    
-
-        
-        num_criterions_config = len(criterions_to_check)
-        if num_criterions_table == num_criterions_config:
+        if version_wcag['version'] == best_version:
+            version_to_test = version_wcag
+            
             break
 
-    for index, value in data_wcag_subtable.items():
-        # Get element index from list of criterion
-        criterion_to_check = criterions_to_check[index].strip()
-        excel_criterion = value.strip()
+    criterions_to_check = version_to_test['success_criterion']
 
-        if criterion_to_check != excel_criterion:
+    num_criterions_losts = 0
+    for criterion_to_check in criterions_to_check:
+     
+        found_criterion = False
+        value_found = False
+        # Buscamos el criterio en la tabla o alguno similar
+        for value in data_wcag_criterions:
 
-            if excel_criterion in criterion_to_check:
-                data_wcag.loc[data_wcag['Principles_Guidelines'] == value, 'Principles_Guidelines'] = criterion_to_check
+            # Tienen que pertenecer al mismo guideline
+            if value[0:3] != criterion_to_check[0:3]:
+                continue
 
-            else:
-                similitud = SM(None, criterion_to_check, value.strip()).ratio()
-                
-                if similitud < 0.75:
-                    found_criterions = False         
-                    error+= 1
-                else:
+            excel_criterion = value.strip()
+
+            if criterion_to_check != excel_criterion:
+
+                if excel_criterion in criterion_to_check:
                     data_wcag.loc[data_wcag['Principles_Guidelines'] == value, 'Principles_Guidelines'] = criterion_to_check
+                    found_criterion = True
+                    value_found = value
+                    break
+                else:
+                    similitud = SM(None, criterion_to_check, value.strip()).ratio()
+                    
+                    if similitud >= 0.75:
+                        data_wcag.loc[data_wcag['Principles_Guidelines'] == value, 'Principles_Guidelines'] = criterion_to_check
+                        found_criterion = True
+                        value_found = value
+                        break
+            else:
+                found_criterion = True
+                value_found = value
 
 
+        if found_criterion is False:
+            num_criterions_losts+=1
+        else:
+            data_wcag_criterions.remove(value_found)
+
+    # Sacamos el fichero a un excel formateado
     path = pathlib.Path(select_fichero)
 
     new_name = path.stem + "_formatted" + path.suffix
 
     path_output = pathlib.Path(path.parent.parent).joinpath('formatted', new_name)
-
     
     data_wcag.to_excel(path_output)
+
+    # Insteramos en la base de datos
+    conn = sqlite3.connect('./data/database/dashboard.db')
+    insert_fichero_db(new_name, 'formatted', best_version, conn)
+    conn.close()
+
+with col1:
+        st.subheader("Ficheros en bruto", anchor=False)
+        for index, element in enumerate(os.listdir(path_raw)):
+            st.checkbox(path_raw + element, key='dynamic_checkbox_raw_' + str(index))
+
+with col2:
+    st.subheader("Ficheros saneados", anchor=False)
+    for index, element in enumerate(os.listdir(path_formatted)):
+        st.checkbox(path_formatted + element, key='dynamic_checkbox_formatted_' + str(index))
+
 
 

@@ -2,6 +2,32 @@ import sqlite3
 import pytest
 
 from wcag.data_api.data_operations import get_geocode, get_city_data
+from wcag.data_api.wcag_operations import get_best_wcag_compability_formattedfile
+
+def test_file_database():
+    """Comprueba la inserción de las características de un fichero en la base de datos
+    """
+
+    # Crear tabla de fichero si no existiese.
+    conn = sqlite3.connect('./tests/dashboard_test.db')
+    cur = conn.cursor()
+    cur.execute('DROP TABLE IF EXISTS ficheros')
+    cur.execute('CREATE TABLE IF NOT EXISTS ficheros (nombre TEXT, tipo TEXT, mejor_version TEXT);')
+
+    file = "Datos WCAG Ayuntamientos.xlsx"
+    type_file = "raw"
+
+    best_version =  get_best_wcag_compability_formattedfile('./tests/WCAG_ayuntamientos_formatted.xlsx')
+
+    cur.execute("INSERT INTO ficheros(nombre, tipo, mejor_version) VALUES (:file, :type_file, :best_version)",
+                     {'file':file, 'type_file': type_file, 'best_version': best_version})
+    
+    assert cur.rowcount == 1
+
+    conn.commit()
+
+    cur.close()    
+
 
 
 def test_city_database_wrong():
