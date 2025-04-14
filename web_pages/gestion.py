@@ -1,5 +1,5 @@
 """"
-Este módulo se encarga de la gestión de los ficheros de la aplicación. Tiene dos a´reas, una
+Este módulo se encarga de la gestión de los ficheros de la aplicación. Tiene dos áreas, una
 donde se suben los ficheros en bruto(ficheros raw) y otra donde se hace una ligera limpieza 
 para que luego puedan vsualizarse y sigan un formato wcag (ficheros formatted)
 """
@@ -14,7 +14,7 @@ import streamlit as st
 import pandas as pd
 
 
-from data_api.wcag_operations import get_best_wcag_compability_rawfile
+from data_api.wcag_operations import get_best_wcag_compability_rawfile, get_principles, get_success_criterion
 from data_api.data_operations import insert_fichero_db, delete_fichero_db
 
 st.subheader("Gestión de ficheros", anchor=False)
@@ -62,7 +62,6 @@ def form_callback_delete():
             st.write( f"Borrado fichero {path_formatted + element }")
 
             conn = sqlite3.connect('./data/database/dashboard.db')
-            print(element)
             delete_fichero_db(element, conn)
             conn.close()
 
@@ -72,30 +71,12 @@ with st.form("form_delete"):
 
 configs_wcag = get_config_toml_wcag()
 
-def get_principles(version_wcag, configs_wcag):
-    """Dada una versión de wcag, busca en el conjunto de wcag del fichero
-    de configuración, los principios asociados a dicha versión
-
-    Args:
-        version_wcag (_type_): Versión de wcag
-        configs_wcag (_type_): Conjunto de wcag del fichero de configuración
-
-    Returns:
-        _type_: Lista de principios asociados a la versión de wcag
-    """
-    filtered_principles = [config_wcag['principles'] for config_wcag in configs_wcag
-                            if config_wcag['version'] ==  version_wcag][0]
-    return filtered_principles
 
 def get_guidelines(version_wcag, configs_wcag):
     filtered_guidelines = [config_wcag['guidelines'] for config_wcag in configs_wcag 
                            if config_wcag['version'] ==  version_wcag][0]
     return filtered_guidelines
 
-def get_success_criterion(version_wcag, configs_wcag):
-    filtered_success_criterion = [config_wcag['success_criterion'] for config_wcag in configs_wcag 
-                                  if config_wcag['version'] ==  version_wcag][0]
-    return filtered_success_criterion
 
 with st.form("form_limpieza"):
     st.subheader("Limpieza inicial", anchor=False)
@@ -141,7 +122,7 @@ if clean_button:
     cities = data_wcag.columns.values.tolist()[2:]
     
     best_version = get_best_wcag_compability_rawfile(data_wcag)
- 
+
     principles = get_principles(best_version, configs_wcag)
 
     guidelines = get_guidelines(best_version, configs_wcag)
@@ -180,17 +161,22 @@ if clean_button:
     criterions_to_check = version_to_test['success_criterion']
     num_criterions_losts = 0
     for criterion_to_check in criterions_to_check:
-     
+        criterion_to_check=criterion_to_check.replace(":", "")
+        criterion_to_check= criterion_to_check.strip()   
         found_criterion = False
         value_found = False
+
+
         # Buscamos el criterio en la tabla o alguno similar
         for value in data_wcag_criterions:
 
-            # Tienen que pertenecer al mismo guideline
-            if value[0:3] != criterion_to_check[0:3]:
-                continue
+            # Tienen que pertenecer al mismo criterio
+            excel_criterion = value.replace(":", "")
+            excel_criterion = excel_criterion.strip()
+            
 
-            excel_criterion = value.strip()
+            if excel_criterion.split()[0] != criterion_to_check.split()[0]:
+                continue
 
             if criterion_to_check != excel_criterion:
                 if excel_criterion in criterion_to_check:
@@ -202,13 +188,16 @@ if clean_button:
                 else:
                     similitud = SM(None, criterion_to_check, value.strip()).ratio()
                     
-                    if similitud >= 0.75:
+                    if similitud >= 0.70:
                         data_wcag.loc[data_wcag['Principles_Guidelines'] == value, 
-                                      'Principles_Guidelines'] = criterion_to_check
+                                      'Principles_Guidelines'] = criterion_to_check   
                         found_criterion = True
                         value_found = value
                         break
             else:
+                data_wcag.loc[data_wcag['Principles_Guidelines'] == value, 
+                                  'Principles_Guidelines'] = criterion_to_check  
+
                 found_criterion = True
                 value_found = value
 

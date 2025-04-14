@@ -11,7 +11,7 @@ import streamlit as st
 import pandas as pd
 
 from data_api.data_operations import get_geocode, get_city_data, insert_city_db, get_fichero_db
-from data_api.wcag_operations import get_config_toml_wcag, get_principles
+from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion
 
 st.subheader("Visualización de datos", anchor=False)
 st.sidebar.header("Visualización de datos")
@@ -125,8 +125,6 @@ if select_fichero:
             data = get_geocode(city)
             
             if data is None:
-                print("data", data)
-                print("city", city)
                 lat = 0
                 lon = 0
                 status = False
@@ -142,6 +140,20 @@ if select_fichero:
         selected_lons.append(lon)       
 
     conn.close()
+
+
+    if select_wcag_versions and select_wcag_versions !=best_version_fichero:
+        criterions_version = get_success_criterion(select_wcag_versions, configs_wcag )
+        criterions_version_index = [item.split()[0] for item in criterions_version]
+        criterions_best = get_success_criterion(best_version_fichero, configs_wcag)
+        criterions_best_index = [item.split()[0] for item in criterions_best]
+        criterions_to_filter_index = [item for item in criterions_best_index if item not in criterions_version_index] 
+        criterions_to_filter = [item for item in criterions_best if item.split()[0] in criterions_to_filter_index]
+
+        data_wcag_subtable = data_wcag_subtable[~data_wcag_subtable['Principles_Guidelines'].isin(criterions_to_filter)]
+        data_wcag_subtable_test = data_wcag_subtable[data_wcag_subtable['Principles_Guidelines'].isin(['1.3.6 Identify Purpose'])]
+
+        st.dataframe(data_wcag_subtable_test) 
 
     if select_principles:
         # Número del principio elegido

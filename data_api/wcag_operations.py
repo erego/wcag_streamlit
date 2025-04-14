@@ -49,28 +49,28 @@ def is_formattedfile_compatible_wcag_version(path_to_file:str, wcag_version:str)
     criterions_to_check = version_config_to_test['success_criterion']
 
     for criterion_to_check in criterions_to_check:
-
+        criterion_to_check=criterion_to_check.replace(":", "")
         found_criterion = False
 
         # Buscamos el criterio en la tabla o alguno similar
         for value in data_wcag_criterions:
 
-            # Tienen que pertenecer al mismo guideline
-            if value[0:3] != criterion_to_check[0:3]:
+            # Tienen que pertenecer al mismo criterio
+            excel_criterion = value.strip().replace(":", "")
+    
+            if excel_criterion.split()[0] != criterion_to_check.split()[0]:
                 continue
 
-
-            excel_criterion = value.strip()
-
             if criterion_to_check != excel_criterion:
-
+                
                 if excel_criterion not in criterion_to_check:
 
                     similitud = SM(None, criterion_to_check, value.strip()).ratio()
                     
-                    if similitud >= 0.75:
+                    if similitud >= 0.70:
                         found_criterion = True  
                         break
+
                 else:
                     found_criterion = True
                     break
@@ -117,18 +117,17 @@ def is_rawfile_compatible_wcag_version(data_wcag:pd.DataFrame, wcag_version:str)
     criterions_to_check = version_config_to_test['success_criterion']
 
     for criterion_to_check in criterions_to_check:
-
+        criterion_to_check=criterion_to_check.replace(":", "")
         found_criterion = False
 
         # Buscamos el criterio en la tabla o alguno similar
         for value in data_wcag_criterions:
 
-            # Tienen que pertenecer al mismo guideline
-            if value[0:3] != criterion_to_check[0:3]:
+            # Tienen que pertenecer al mismo criterio
+            excel_criterion = value.strip().replace(":", "")
+    
+            if excel_criterion.split()[0] != criterion_to_check.split()[0]:
                 continue
-
-
-            excel_criterion = value.strip()
 
             if criterion_to_check != excel_criterion:
 
@@ -136,7 +135,7 @@ def is_rawfile_compatible_wcag_version(data_wcag:pd.DataFrame, wcag_version:str)
 
                     similitud = SM(None, criterion_to_check, value.strip()).ratio()
                     
-                    if similitud >= 0.75:
+                    if similitud >= 0.70:
                         found_criterion = True  
                         break
                 else:
@@ -195,54 +194,19 @@ def get_best_wcag_compability_rawfile(data_wcag:pd.DataFrame)-> str:
  
     return None
 
-def get_wcag_compability(path_to_file:str, version_to_compare:dict)-> bool:
-    """Función que valida la compatibilidad de un fichero con una versión de wcag
+
+def get_wcag_data_filtered(wcag_data: pd.DataFrame, version_to_filter: str):
+    """Función que filtra un pandas DataFrame teniendo en cuenta la versión a la que queremos ajustarlo
 
     Args:
-        path_to_file (str): Ruta al fichero con los datos
-        version_to_compare (dict): Configuración de la versión de wcag del fichero de configuración TOML
-
-    Returns:
-        bool: Devuelve verdadero si es compatible, en caso contrario devuelve falso
+        wcag_data (pd.DataFrame): pandas DataFrame a filtrar
+        version_to_filter (str): Versión que queremos usar de referencia para filtrar
     """
-
-    is_compatible = False
-
-    data_wcag = pd.read_excel(path_to_file, index_col = 0)
-    data_wcag_subtable = data_wcag.loc[:,["Sucess_Criterion", "Principles_Guidelines"]] 
-    data_wcag_subtable = data_wcag_subtable.dropna()
-    data_wcag_subtable = data_wcag_subtable["Principles_Guidelines"]
-    data_wcag_subtable = data_wcag_subtable.reset_index(drop=True)
-    num_criterions_table = data_wcag_subtable.shape[0]
-
-    criterions_to_check = version_to_compare['success_criterion']
-    num_criterions_config = len(criterions_to_check)
-    
-    found_compatible_criterions = True
-
-    if num_criterions_table == num_criterions_config:
-        for index, value in data_wcag_subtable.items():
-            # Get element index from list of criterion
-            criterion_to_check = criterions_to_check[index].strip()
-            excel_criterion = value.strip()
-
-            if criterion_to_check != excel_criterion:
-
-                if excel_criterion not in criterion_to_check:
-                    similitud = SM(None, criterion_to_check, value.strip()).ratio()
-                    
-                    if similitud < 0.75:
-                        found_compatible_criterions = False         
-    
-        if found_compatible_criterions is True:
-            is_compatible = True
-
-    return is_compatible
-
 
 def get_principles(version_wcag:str, configs_wcag):
 
-    """_summary_
+    """Dada una versión de wcag, busca en el conjunto de wcag del fichero
+    de configuración, los principios asociados a dicha versió
 
         Args:
         version_wcag (str): Versión wcag elegida
@@ -251,6 +215,20 @@ def get_principles(version_wcag:str, configs_wcag):
     Returns:
         list: List con los principios de esa versión wcag
     """
-
     filtered_principles = [config_wcag['principles'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
     return filtered_principles
+
+def get_success_criterion(version_wcag:str, configs_wcag):
+
+    """Obtiene los criterios de éxito asociados a una versión de wcag
+
+        Args:
+        version_wcag (str): Versión wcag elegida
+        configs_wcag (dictionary): Diccionario de configuración de versiones wcag
+
+    Returns:
+        list: List con los criterios de éxito de esa versión wcag
+    """
+
+    success_criterion_principles = [config_wcag['success_criterion'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
+    return success_criterion_principles

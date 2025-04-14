@@ -2,7 +2,7 @@ import pandas as pd
 from difflib import SequenceMatcher as SM
 from wcag.data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability_formattedfile, is_formattedfile_compatible_wcag_version, is_rawfile_compatible_wcag_version
 
-
+import pytest
 
 def test_check_version_compatible_formattedfile():
 
@@ -23,7 +23,6 @@ def test_check_version_compatible_formattedfile():
     result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
 
     assert result is False
-
 
 
 def test_check_version_compatible_rawfile():
@@ -99,17 +98,18 @@ def test_wcag_adjust_formattedfile():
     
     num_criterions_losts = 0
     for criterion_to_check in criterions_to_check:
-     
+        criterion_to_check=criterion_to_check.replace(":", "")
         found_criterion = False
         value_found = False
+        
         # Buscamos el criterio en la tabla o alguno similar
         for value in data_wcag_criterions:
 
-            # Tienen que pertenecer al mismo guideline
-            if value[0:3] != criterion_to_check[0:3]:
+            # Tienen que pertenecer al mismo criterio
+            excel_criterion = value.strip().replace(":", "")
+    
+            if excel_criterion.split()[0] != criterion_to_check.split()[0]:
                 continue
-
-            excel_criterion = value.strip()
 
             if criterion_to_check != excel_criterion:
 
@@ -121,7 +121,7 @@ def test_wcag_adjust_formattedfile():
                 else:
                     similitud = SM(None, criterion_to_check, value.strip()).ratio()
                     
-                    if similitud >= 0.75:
+                    if similitud >= 0.70:
                         data_wcag.loc[data_wcag['Principles_Guidelines'] == value, 'Principles_Guidelines'] = criterion_to_check
                         found_criterion = True
                         value_found = value
