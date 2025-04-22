@@ -11,7 +11,7 @@ import streamlit as st
 import pandas as pd
 
 from data_api.data_operations import get_geocode, get_city_data, insert_city_db, get_fichero_db
-from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion
+from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion, get_guidelines
 
 st.subheader("Visualización de datos", anchor=False)
 st.sidebar.header("Visualización de datos")
@@ -96,6 +96,17 @@ if select_fichero:
     if select_wcag_versions:
         principles_version = get_principles(select_wcag_versions, configs_wcag)
         select_principles = st.sidebar.multiselect("Elige los principios", principles_version,)
+    
+        guidelines_version = get_guidelines(select_wcag_versions, configs_wcag)
+
+        if select_principles:
+            lst_num_principles = []
+            for select_principle in select_principles:
+                lst_num_principles.append(select_principle[10:11])
+           
+            guidelines_version = [element for element in guidelines_version if element.startswith(tuple(lst_num_principles))]
+
+        select_guidelines = st.sidebar.multiselect("Elige las pautas principales", guidelines_version,)
 
     all_cities = get_wcag_cities(select_fichero)
     select_cities = st.sidebar.multiselect(
@@ -153,16 +164,27 @@ if select_fichero:
         data_wcag_subtable = data_wcag_subtable[~data_wcag_subtable['Principles_Guidelines'].isin(criterions_to_filter)]
         data_wcag_subtable_test = data_wcag_subtable[data_wcag_subtable['Principles_Guidelines'].isin(['1.3.6 Identify Purpose'])]
 
-        st.dataframe(data_wcag_subtable_test) 
+   
 
-    if select_principles:
+    if select_guidelines:
+        lst_to_filter = []
+        for select_guideline in select_guidelines:
+            lst_to_filter.append(select_guideline.split()[0])
+            lst_to_filter.append("Principle " + select_guideline[0])
+        
+        lst_to_filter = set(lst_to_filter)
+        result = data_wcag_subtable.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(tuple(lst_to_filter))
+        data_wcag_subtable = data_wcag_subtable[result]
+
+    elif select_principles:
+        lst_to_filter = []
         # Número del principio elegido
-        lst_num_principles = []
         for select_principle in select_principles:
-            lst_num_principles.append(select_principle)
-            lst_num_principles.append(select_principle[10:11])
+            lst_to_filter.append(select_principle)
+            lst_to_filter.append(select_principle[10:11])
+        lst_to_filter = set(lst_to_filter)
 
-        result = data_wcag_subtable.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(tuple(lst_num_principles))
+        result = data_wcag_subtable.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(tuple(lst_to_filter))
         data_wcag_subtable = data_wcag_subtable[result]
 
 

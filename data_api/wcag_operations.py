@@ -206,7 +206,7 @@ def get_wcag_data_filtered(wcag_data: pd.DataFrame, version_to_filter: str):
 def get_principles(version_wcag:str, configs_wcag):
 
     """Dada una versión de wcag, busca en el conjunto de wcag del fichero
-    de configuración, los principios asociados a dicha versió
+    de configuración, los principios asociados a dicha versión
 
         Args:
         version_wcag (str): Versión wcag elegida
@@ -217,6 +217,23 @@ def get_principles(version_wcag:str, configs_wcag):
     """
     filtered_principles = [config_wcag['principles'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
     return filtered_principles
+
+def get_guidelines(version_wcag:str, configs_wcag):
+
+    """Dada una versión de wcag, busca en el conjunto de wcag del fichero
+    de configuración, las pautas principales asociadzs a dicha versión
+
+        Args:
+        version_wcag (str): Versión wcag elegida
+        configs_wcag (dictionary): Diccionario de configuración de versiones wcag
+
+    Returns:
+        list: List con las pautas principales de esa versión wcag
+    """
+    filtered_guidelines = [config_wcag['guidelines'] for config_wcag in configs_wcag 
+                           if config_wcag['version'] ==  version_wcag][0]
+    return filtered_guidelines
+
 
 def get_success_criterion(version_wcag:str, configs_wcag):
 

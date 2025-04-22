@@ -14,7 +14,7 @@ import streamlit as st
 import pandas as pd
 
 
-from data_api.wcag_operations import get_best_wcag_compability_rawfile, get_principles, get_success_criterion
+from data_api.wcag_operations import get_best_wcag_compability_rawfile, get_principles, get_success_criterion, get_guidelines
 from data_api.data_operations import insert_fichero_db, delete_fichero_db
 
 st.subheader("Gestión de ficheros", anchor=False)
@@ -70,12 +70,6 @@ with st.form("form_delete"):
                                           on_click=form_callback_delete)
 
 configs_wcag = get_config_toml_wcag()
-
-
-def get_guidelines(version_wcag, configs_wcag):
-    filtered_guidelines = [config_wcag['guidelines'] for config_wcag in configs_wcag 
-                           if config_wcag['version'] ==  version_wcag][0]
-    return filtered_guidelines
 
 
 with st.form("form_limpieza"):
