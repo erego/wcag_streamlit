@@ -247,5 +247,20 @@ def get_success_criterion(version_wcag:str, configs_wcag):
         list: List con los criterios de éxito de esa versión wcag
     """
 
-    success_criterion_principles = [config_wcag['success_criterion'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
-    return success_criterion_principles
+    success_criterion = [config_wcag['success_criterion'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
+    return success_criterion
+
+def get_levels_criterion(version_wcag:str, configs_wcag):
+
+    """Obtiene los criterios de éxito y sus niveles asociados a una versión de wcag
+
+        Args:
+        version_wcag (str): Versión wcag elegida
+        configs_wcag (dictionary): Diccionario de configuración de versiones wcag
+
+    Returns:
+        list: List con los niveles y sus criterios para esa versión wcag
+    """
+
+    levels = [config_wcag['levels'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
+    return levels

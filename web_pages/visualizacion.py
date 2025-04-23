@@ -11,7 +11,7 @@ import streamlit as st
 import pandas as pd
 
 from data_api.data_operations import get_geocode, get_city_data, insert_city_db, get_fichero_db
-from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion, get_guidelines
+from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion, get_guidelines, get_levels_criterion
 
 st.subheader("Visualización de datos", anchor=False)
 st.sidebar.header("Visualización de datos")
@@ -108,6 +108,18 @@ if select_fichero:
 
         select_guidelines = st.sidebar.multiselect("Elige las pautas principales", guidelines_version,)
 
+
+        levels_criterion = get_levels_criterion(select_wcag_versions, configs_wcag)
+
+        list_of_levels = set()
+        for element in levels_criterion:
+            list_of_levels.add(element["level"])
+        list_of_levels = list(list_of_levels)
+        list_of_levels.sort()
+        select_levels = st.sidebar.multiselect("Elige los niveles", list_of_levels,)
+
+
+
     all_cities = get_wcag_cities(select_fichero)
     select_cities = st.sidebar.multiselect(
         "Elige las ciudades", all_cities, 
@@ -162,8 +174,6 @@ if select_fichero:
         criterions_to_filter = [item for item in criterions_best if item.split()[0] in criterions_to_filter_index]
 
         data_wcag_subtable = data_wcag_subtable[~data_wcag_subtable['Principles_Guidelines'].isin(criterions_to_filter)]
-        data_wcag_subtable_test = data_wcag_subtable[data_wcag_subtable['Principles_Guidelines'].isin(['1.3.6 Identify Purpose'])]
-
    
 
     if select_guidelines:
@@ -188,6 +198,12 @@ if select_fichero:
         data_wcag_subtable = data_wcag_subtable[result]
 
 
+    if select_levels:
+
+        lst_levels_filter = select_levels
+
+        data_wcag_subtable = data_wcag_subtable[data_wcag_subtable['Sucess_Criterion'].isin(lst_levels_filter) | data_wcag_subtable['Sucess_Criterion'].isnull()]
+
     st.dataframe(data_wcag_subtable)
 
     st.markdown("# Informe de calidad de los datos")
@@ -197,6 +213,19 @@ if select_fichero:
 
     data_wcag_subtable_statistics = get_statistics_data(data_wcag_subtable)
     st.dataframe(data_wcag_subtable_statistics) 
+
+    # import numpy as np
+    # chart_data = pd.DataFrame(
+    #     np.random.rand(9, 4),
+    #     index=["air","coffee","orange","whitebread","potato","wine","beer","wheatbread","carrot"],
+    # )
+    # st.dataframe(chart_data) 
+    # Vertical stacked bar chart
+    # st.bar_chart(chart_data)
+    # data_wcag_subtable_stacked = data_wcag_subtable.drop("Principle_Guidelines")
+    # st.dataframe(data_wcag_subtable_stacked)
+    #st.bar_chart(data_wcag_subtable)
+
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor máximo"], color=["#d2c5dc"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor mínimo"], color=["#e5e0b7"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Cardinalidad"], color=["#f9dfd6"],)

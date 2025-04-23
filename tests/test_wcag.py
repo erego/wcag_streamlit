@@ -1,7 +1,7 @@
 import pandas as pd
 from difflib import SequenceMatcher as SM
 from wcag.data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability_formattedfile, is_formattedfile_compatible_wcag_version, is_rawfile_compatible_wcag_version
-
+from wcag.data_api.wcag_operations import get_levels_criterion
 import pytest
 
 def test_check_version_compatible_formattedfile():
@@ -23,6 +23,15 @@ def test_check_version_compatible_formattedfile():
     result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
 
     assert result is False
+
+def test_get_levels():
+    version_to_test = "2.1"
+    configs_wcag = get_config_toml_wcag()
+    levels_criterion = get_levels_criterion(version_to_test, configs_wcag)
+    list_of_levels = {element["level"] for element in levels_criterion}
+    
+    assert len(list_of_levels) == 3
+    assert 'AAA' in list_of_levels
 
 
 def test_check_version_compatible_rawfile():
