@@ -42,8 +42,29 @@ def get_statistics_data(data_wcag_subtable):
     data_wcag_subtable_statistics.drop('Sucess_Criterion', inplace = True)
 
     max_serie = data_wcag_subtable_statistics.max(axis = 0)
-    max_serie.name = 'Valor máximo'
     min_serie = data_wcag_subtable_statistics.min(axis = 0)
+
+    dict_max_cities = dict()
+    for index, value in max_serie.items():
+        result_column = data_wcag_subtable_statistics.loc[:,index]
+        result_column = result_column[result_column == value].index.tolist()
+        result_column.sort()
+        dict_max_cities[index] = result_column
+
+
+    dict_min_cities = dict()
+    for index, value in min_serie.items():
+        result_column = data_wcag_subtable_statistics.loc[:,index]
+        result_column = result_column[result_column == value].index.tolist()
+        result_column.sort()
+        dict_min_cities[index] = result_column
+
+
+    max_serie_cities = pd.Series(dict_max_cities)
+    max_serie_cities.name = 'Mejores ciudades'
+    max_serie.name = 'Valor máximo'
+    min_serie_cities = pd.Series(dict_min_cities)
+    min_serie_cities.name = 'Peores ciudades'
     min_serie.name = 'Valor mínimo'
     total_valores_serie = data_wcag_subtable_statistics.count(axis = 0)
     total_valores_serie.name = 'Total Valores'
@@ -58,8 +79,9 @@ def get_statistics_data(data_wcag_subtable):
     mean_serie.name = 'Media'
     median_serie = data_wcag_subtable_statistics.mean(axis = 0)
     median_serie.name = 'Mediana'
-    result_statistics = pd.concat([total_valores_serie, max_serie, min_serie, valores_nulos_serie, 
-                                   cardinalidad_serie, mean_serie, median_serie], axis = 1) 
+    result_statistics = pd.concat([total_valores_serie, valores_nulos_serie, 
+                                   cardinalidad_serie, mean_serie, median_serie, max_serie_cities, max_serie,
+                                    min_serie_cities, min_serie], axis = 1) 
     return result_statistics
 
 if 'versions_wcag' not in st.session_state:
@@ -223,6 +245,7 @@ if select_fichero:
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor máximo"], color=["#d2c5dc"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor mínimo"], color=["#e5e0b7"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Cardinalidad"], color=["#f9dfd6"],)
+
     dataframe_geo = pd.DataFrame({
         'ciudad' : selected_cities,
         'lat': selected_lats,
@@ -244,8 +267,10 @@ if select_fichero:
                     data=dataframe_geo,
                     get_position="[lon, lat]",
                     get_color="[100, 30, 0, 160]",
+                    pickable=True,
                     get_radius=15000,
                 ),
             ],
+            tooltip={"text": "{ciudad}"},
         )
     )
