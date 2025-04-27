@@ -10,8 +10,8 @@ import sqlite3
 import streamlit as st
 import pandas as pd
 
-from data_api.data_operations import get_geocode, get_city_data, insert_city_db, get_fichero_db
-from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion, get_guidelines, get_levels_criterion, get_levels_criterion_from_dataframe
+from data_api.data_operations import get_geocode, get_city_data, insert_city_db, get_fichero_db, get_statistics_data
+from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion, get_guidelines, get_levels_criterion_from_dataframe
 
 st.subheader("Visualización de datos", anchor=False)
 st.sidebar.header("Visualización de datos")
@@ -32,57 +32,6 @@ def get_wcag_cities(select_fichero):
     cities.sort()
     return cities
 
-
-def get_statistics_data(data_wcag_subtable):
-    # Nos quedaremos sólo con las columnas que tengan criterios de éxito y borraremos el resto
-    data_wcag_subtable_statistics =  data_wcag_subtable.set_index('Principles_Guidelines')
-    data_wcag_subtable_statistics = data_wcag_subtable_statistics.dropna(
-        subset=['Sucess_Criterion'])
-    data_wcag_subtable_statistics = data_wcag_subtable_statistics.transpose()
-    data_wcag_subtable_statistics.drop('Sucess_Criterion', inplace = True)
-
-    max_serie = data_wcag_subtable_statistics.max(axis = 0)
-    min_serie = data_wcag_subtable_statistics.min(axis = 0)
-
-    dict_max_cities = dict()
-    for index, value in max_serie.items():
-        result_column = data_wcag_subtable_statistics.loc[:,index]
-        result_column = result_column[result_column == value].index.tolist()
-        result_column.sort()
-        dict_max_cities[index] = result_column
-
-
-    dict_min_cities = dict()
-    for index, value in min_serie.items():
-        result_column = data_wcag_subtable_statistics.loc[:,index]
-        result_column = result_column[result_column == value].index.tolist()
-        result_column.sort()
-        dict_min_cities[index] = result_column
-
-
-    max_serie_cities = pd.Series(dict_max_cities)
-    max_serie_cities.name = 'Mejores ciudades'
-    max_serie.name = 'Valor máximo'
-    min_serie_cities = pd.Series(dict_min_cities)
-    min_serie_cities.name = 'Peores ciudades'
-    min_serie.name = 'Valor mínimo'
-    total_valores_serie = data_wcag_subtable_statistics.count(axis = 0)
-    total_valores_serie.name = 'Total Valores'
-    valores_nulos_serie = data_wcag_subtable_statistics.isnull().sum()
-    valores_nulos_serie.name = 'Total valores nulos'
-    cardinalidad_serie = data_wcag_subtable_statistics.nunique()
-    cardinalidad_serie.name = 'Cardinalidad'
-    #moda_serie = data_wcag_subtable_statistics.mode(axis = 0).transpose(
-    #    ).fillna('').astype(str).apply(','.join, axis=1)
-    #moda_serie.name = 'Moda'
-    mean_serie = data_wcag_subtable_statistics.mean(axis = 0)
-    mean_serie.name = 'Media'
-    median_serie = data_wcag_subtable_statistics.mean(axis = 0)
-    median_serie.name = 'Mediana'
-    result_statistics = pd.concat([total_valores_serie, valores_nulos_serie, 
-                                   cardinalidad_serie, mean_serie, median_serie, max_serie_cities, max_serie,
-                                    min_serie_cities, min_serie], axis = 1) 
-    return result_statistics
 
 if 'versions_wcag' not in st.session_state:
     st.session_state['versions_wcag'] = get_config_toml_wcag()
@@ -230,18 +179,27 @@ if select_fichero:
     data_wcag_subtable_statistics = get_statistics_data(data_wcag_subtable)
     st.dataframe(data_wcag_subtable_statistics) 
 
-    # import numpy as np
-    # chart_data = pd.DataFrame(
-    #     np.random.rand(9, 4),
-    #     index=["air","coffee","orange","whitebread","potato","wine","beer","wheatbread","carrot"],
-    # )
-    # st.dataframe(chart_data) 
-    # Vertical stacked bar chart
-    # st.bar_chart(chart_data)
-    # data_wcag_subtable_stacked = data_wcag_subtable.drop("Principle_Guidelines")
-    # st.dataframe(data_wcag_subtable_stacked)
-    #st.bar_chart(data_wcag_subtable)
+    data_stacked = data_wcag_subtable.copy()
+    data_stacked = data_stacked.dropna() 
+    data_stacked.drop('Sucess_Criterion', axis=1, inplace=True) 
+    data_stacked.set_index('Principles_Guidelines', inplace=True)
 
+    list_rows = []
+    for index, value in data_stacked.iterrows():
+      series_valor = value.value_counts().sort_index()
+      row_dict = dict()
+      row_dict["Principles_Guidelines"]=index
+      row_dict["Valor 1"] =series_valor.at[1.0] if 1.0 in series_valor.index  else 0
+      row_dict["Valor 2"] =series_valor.at[2.0] if 2.0 in series_valor.index  else 0
+      row_dict["Valor 3"] =series_valor.at[3.0] if 3.0 in series_valor.index  else 0
+      row_dict["Valor 4"] =series_valor.at[4.0] if 4.0 in series_valor.index  else 0
+      row_dict["Valor 5"] =series_valor.at[5.0] if 5.0 in series_valor.index  else 0
+      list_rows.append(row_dict)
+
+    data_stacked = pd.DataFrame(list_rows)
+    data_stacked.set_index('Principles_Guidelines', inplace=True)
+    st.bar_chart(data_stacked)
+  
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor máximo"], color=["#d2c5dc"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor mínimo"], color=["#e5e0b7"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Cardinalidad"], color=["#f9dfd6"],)

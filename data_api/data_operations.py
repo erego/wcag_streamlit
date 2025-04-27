@@ -2,6 +2,67 @@ import urllib
 import requests
 import json
 
+import pandas as pd
+
+def get_statistics_data(data_wcag_subtable):
+    """Obtiene diferentes valores estadísticos en formato DataFrame de un DataFrame proporcionado
+
+    Args:
+        data_wcag_subtable (_type_): DataFrame del que obtendremos las estadísticas
+
+    Returns:
+        _type_: Devuelve un DataFrame con valores asociados estadísticos asociados al DataFrame proporcionado
+    """
+    # Nos quedaremos sólo con las columnas que tengan criterios de éxito y borraremos el resto
+    data_wcag_subtable_statistics =  data_wcag_subtable.set_index('Principles_Guidelines')
+    data_wcag_subtable_statistics = data_wcag_subtable_statistics.dropna(
+        subset=['Sucess_Criterion'])
+    data_wcag_subtable_statistics = data_wcag_subtable_statistics.transpose()
+    data_wcag_subtable_statistics.drop('Sucess_Criterion', inplace = True)
+
+    max_serie = data_wcag_subtable_statistics.max(axis = 0)
+    min_serie = data_wcag_subtable_statistics.min(axis = 0)
+
+    dict_max_cities = dict()
+    for index, value in max_serie.items():
+        result_column = data_wcag_subtable_statistics.loc[:,index]
+        result_column = result_column[result_column == value].index.tolist()
+        result_column.sort()
+        dict_max_cities[index] = result_column
+
+
+    dict_min_cities = dict()
+    for index, value in min_serie.items():
+        result_column = data_wcag_subtable_statistics.loc[:,index]
+        result_column = result_column[result_column == value].index.tolist()
+        result_column.sort()
+        dict_min_cities[index] = result_column
+
+
+    max_serie_cities = pd.Series(dict_max_cities)
+    max_serie_cities.name = 'Mejores ciudades'
+    max_serie.name = 'Valor máximo'
+    min_serie_cities = pd.Series(dict_min_cities)
+    min_serie_cities.name = 'Peores ciudades'
+    min_serie.name = 'Valor mínimo'
+    total_valores_serie = data_wcag_subtable_statistics.count(axis = 0)
+    total_valores_serie.name = 'Total Valores'
+    valores_nulos_serie = data_wcag_subtable_statistics.isnull().sum()
+    valores_nulos_serie.name = 'Total valores nulos'
+    cardinalidad_serie = data_wcag_subtable_statistics.nunique()
+    cardinalidad_serie.name = 'Cardinalidad'
+    #moda_serie = data_wcag_subtable_statistics.mode(axis = 0).transpose(
+    #    ).fillna('').astype(str).apply(','.join, axis=1)
+    #moda_serie.name = 'Moda'
+    mean_serie = data_wcag_subtable_statistics.mean(axis = 0)
+    mean_serie.name = 'Media'
+    median_serie = data_wcag_subtable_statistics.mean(axis = 0)
+    median_serie.name = 'Mediana'
+    result_statistics = pd.concat([total_valores_serie, valores_nulos_serie, 
+                                   cardinalidad_serie, mean_serie, median_serie, max_serie_cities, max_serie,
+                                    min_serie_cities, min_serie], axis = 1) 
+    return result_statistics
+
 def get_geocode(ciudad:str):
     """Llamada a la api de cartociudad para obtener datos geográficos de la ciudad
 
@@ -64,7 +125,6 @@ def insert_fichero_db(nombre:str, tipo:str, mejor_version:str, connection):
 
     connection.commit()
     cur.close()
-
 
 def delete_fichero_db(nombre:str, connection):
     """Borra de la tabla ficheros registros
