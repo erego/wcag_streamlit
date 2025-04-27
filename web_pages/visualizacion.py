@@ -189,17 +189,17 @@ if select_fichero:
       series_valor = value.value_counts().sort_index()
       row_dict = dict()
       row_dict["Principles_Guidelines"]=index
-      row_dict["Valor 1"] =series_valor.at[1.0] if 1.0 in series_valor.index  else 0
-      row_dict["Valor 2"] =series_valor.at[2.0] if 2.0 in series_valor.index  else 0
-      row_dict["Valor 3"] =series_valor.at[3.0] if 3.0 in series_valor.index  else 0
-      row_dict["Valor 4"] =series_valor.at[4.0] if 4.0 in series_valor.index  else 0
-      row_dict["Valor 5"] =series_valor.at[5.0] if 5.0 in series_valor.index  else 0
+      row_dict["1: No conseguido"] =series_valor.at[1.0] if 1.0 in series_valor.index  else 0
+      row_dict["2: Parcialmente conseguido"] =series_valor.at[2.0] if 2.0 in series_valor.index  else 0
+      row_dict["3: No aplicable"] =series_valor.at[3.0] if 3.0 in series_valor.index  else 0
+      row_dict["4: Ampliamente conseguido"] =series_valor.at[4.0] if 4.0 in series_valor.index  else 0
+      row_dict["5: Totalmente conseguido"] =series_valor.at[5.0] if 5.0 in series_valor.index  else 0
       list_rows.append(row_dict)
 
     data_stacked = pd.DataFrame(list_rows)
     data_stacked.set_index('Principles_Guidelines', inplace=True)
     st.bar_chart(data_stacked)
-  
+ 
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor máximo"], color=["#d2c5dc"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor mínimo"], color=["#e5e0b7"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Cardinalidad"], color=["#f9dfd6"],)
