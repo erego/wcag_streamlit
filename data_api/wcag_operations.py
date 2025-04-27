@@ -264,3 +264,23 @@ def get_levels_criterion(version_wcag:str, configs_wcag):
 
     levels = [config_wcag['levels'] for config_wcag in configs_wcag if config_wcag['version'] ==  version_wcag][0]
     return levels
+
+
+
+def get_levels_criterion_from_dataframe(dataframe_levels:pd.DataFrame):
+
+
+    """Obtiene los niveles asociados a un dataframe que puede estar filtrado
+
+        Args:
+        dataframe_levels (pd.DataFrame): Dataframe del que extraer los niveles
+
+    Returns:
+        list: List con los niveles 
+    """
+
+    levels_column = list(set(dataframe_levels['Sucess_Criterion'].dropna()))
+    levels_column.sort()
+    return levels_column
+
+                                    

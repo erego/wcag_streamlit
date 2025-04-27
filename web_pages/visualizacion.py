@@ -11,7 +11,7 @@ import streamlit as st
 import pandas as pd
 
 from data_api.data_operations import get_geocode, get_city_data, insert_city_db, get_fichero_db
-from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion, get_guidelines, get_levels_criterion
+from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion, get_guidelines, get_levels_criterion, get_levels_criterion_from_dataframe
 
 st.subheader("Visualización de datos", anchor=False)
 st.sidebar.header("Visualización de datos")
@@ -109,15 +109,48 @@ if select_fichero:
         select_guidelines = st.sidebar.multiselect("Elige las pautas principales", guidelines_version,)
 
 
-        levels_criterion = get_levels_criterion(select_wcag_versions, configs_wcag)
+    if select_wcag_versions and select_wcag_versions !=best_version_fichero:
+        criterions_version = get_success_criterion(select_wcag_versions, configs_wcag )
+        criterions_version_index = [item.split()[0] for item in criterions_version]
+        criterions_best = get_success_criterion(best_version_fichero, configs_wcag)
+        criterions_best_index = [item.split()[0] for item in criterions_best]
+        criterions_to_filter_index = [item for item in criterions_best_index if item not in criterions_version_index] 
+        criterions_to_filter = [item for item in criterions_best if item.split()[0] in criterions_to_filter_index]
 
-        list_of_levels = set()
-        for element in levels_criterion:
-            list_of_levels.add(element["level"])
-        list_of_levels = list(list_of_levels)
-        list_of_levels.sort()
-        select_levels = st.sidebar.multiselect("Elige los niveles", list_of_levels,)
+        data_wcag_subtable = data_wcag_subtable[~data_wcag_subtable['Principles_Guidelines'].isin(criterions_to_filter)]
+   
 
+    if select_guidelines:
+        lst_to_filter = []
+        for select_guideline in select_guidelines:
+            lst_to_filter.append(select_guideline.split()[0])
+            lst_to_filter.append("Principle " + select_guideline[0])
+        
+        lst_to_filter = set(lst_to_filter)
+        result = data_wcag_subtable.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(tuple(lst_to_filter))
+        data_wcag_subtable = data_wcag_subtable[result]
+
+    elif select_principles:
+        lst_to_filter = []
+        # Número del principio elegido
+        for select_principle in select_principles:
+            lst_to_filter.append(select_principle)
+            lst_to_filter.append(select_principle[10:11])
+        lst_to_filter = set(lst_to_filter)
+
+        result = data_wcag_subtable.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(tuple(lst_to_filter))
+        data_wcag_subtable = data_wcag_subtable[result]
+
+
+    levels_criterion = get_levels_criterion_from_dataframe(data_wcag_subtable)
+    select_levels = st.sidebar.multiselect("Elige los niveles", levels_criterion,)
+
+
+    if select_levels:
+
+        lst_levels_filter = select_levels
+
+        data_wcag_subtable = data_wcag_subtable[data_wcag_subtable['Sucess_Criterion'].isin(lst_levels_filter) | data_wcag_subtable['Sucess_Criterion'].isnull()]
 
 
     all_cities = get_wcag_cities(select_fichero)
@@ -164,45 +197,6 @@ if select_fichero:
 
     conn.close()
 
-
-    if select_wcag_versions and select_wcag_versions !=best_version_fichero:
-        criterions_version = get_success_criterion(select_wcag_versions, configs_wcag )
-        criterions_version_index = [item.split()[0] for item in criterions_version]
-        criterions_best = get_success_criterion(best_version_fichero, configs_wcag)
-        criterions_best_index = [item.split()[0] for item in criterions_best]
-        criterions_to_filter_index = [item for item in criterions_best_index if item not in criterions_version_index] 
-        criterions_to_filter = [item for item in criterions_best if item.split()[0] in criterions_to_filter_index]
-
-        data_wcag_subtable = data_wcag_subtable[~data_wcag_subtable['Principles_Guidelines'].isin(criterions_to_filter)]
-   
-
-    if select_guidelines:
-        lst_to_filter = []
-        for select_guideline in select_guidelines:
-            lst_to_filter.append(select_guideline.split()[0])
-            lst_to_filter.append("Principle " + select_guideline[0])
-        
-        lst_to_filter = set(lst_to_filter)
-        result = data_wcag_subtable.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(tuple(lst_to_filter))
-        data_wcag_subtable = data_wcag_subtable[result]
-
-    elif select_principles:
-        lst_to_filter = []
-        # Número del principio elegido
-        for select_principle in select_principles:
-            lst_to_filter.append(select_principle)
-            lst_to_filter.append(select_principle[10:11])
-        lst_to_filter = set(lst_to_filter)
-
-        result = data_wcag_subtable.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(tuple(lst_to_filter))
-        data_wcag_subtable = data_wcag_subtable[result]
-
-
-    if select_levels:
-
-        lst_levels_filter = select_levels
-
-        data_wcag_subtable = data_wcag_subtable[data_wcag_subtable['Sucess_Criterion'].isin(lst_levels_filter) | data_wcag_subtable['Sucess_Criterion'].isnull()]
 
     st.dataframe(data_wcag_subtable)
 
