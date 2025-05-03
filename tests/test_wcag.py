@@ -1,7 +1,7 @@
 import pandas as pd
 from difflib import SequenceMatcher as SM
-from wcag.data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability_formattedfile, is_formattedfile_compatible_wcag_version, is_rawfile_compatible_wcag_version
-from wcag.data_api.wcag_operations import get_levels_criterion, get_levels_criterion_from_dataframe
+from ..data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability_formattedfile, is_formattedfile_compatible_wcag_version, is_rawfile_compatible_wcag_version
+from ..data_api.wcag_operations import get_levels_criterion, get_levels_criterion_from_dataframe
 
 
 def test_check_version_compatible_formattedfile():
