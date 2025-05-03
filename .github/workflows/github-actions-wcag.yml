@@ -23,9 +23,9 @@ jobs:
           pytest-args: -v --junit-xml=test-results.xml
           ruff: true
 
-        - if: always()
-          uses: pmeier/pytest-results-action@v0.6.0
-          with:
-            path: test-results.xml
-            summary: true
-            display-options: fEX
+      - if: always()
+        uses: pmeier/pytest-results-action@v0.6.0
+        with:
+          path: test-results.xml
+          summary: true
+          display-options: fEX
