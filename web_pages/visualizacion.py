@@ -44,7 +44,7 @@ if select_fichero:
 
     # Consultamos la mejor versión para el fichero en la base de datos y añadimos las versiones que
     # correspondan
-    conn = sqlite3.connect('./data/database/dashboard.db')
+    conn = sqlite3.connect(st.secrets.db_production.path)
     fichero_data = get_fichero_db(select_fichero.split('/')[-1], "formatted", conn)
     conn.close()
     fichero_data = fichero_data[0]
@@ -137,7 +137,7 @@ if select_fichero:
 
     selected_lats = []
     selected_lons = []
-    conn = sqlite3.connect('./data/database/dashboard.db')  
+    conn = sqlite3.connect(st.secrets.db_production.path)  
 
     for city in selected_cities:
       

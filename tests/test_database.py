@@ -1,6 +1,8 @@
 import sqlite3
 import pytest
 
+import streamlit as st
+
 from wcag.data_api.data_operations import get_geocode, get_city_data
 from wcag.data_api.wcag_operations import get_best_wcag_compability_formattedfile
 
@@ -9,7 +11,7 @@ def test_file_database():
     """
 
     # Crear tabla de fichero si no existiese.
-    conn = sqlite3.connect('./tests/dashboard_test.db')
+    conn = sqlite3.connect(st.secrets.db_test.path)
     cur = conn.cursor()
     cur.execute('DROP TABLE IF EXISTS ficheros')
     cur.execute('CREATE TABLE IF NOT EXISTS ficheros (nombre TEXT, tipo TEXT, mejor_version TEXT);')
@@ -35,7 +37,7 @@ def test_city_database_wrong():
     """
 
     # Crear tabla de ciudades si no existiese.
-    conn = sqlite3.connect('./tests/dashboard_test.db')
+    conn = sqlite3.connect(st.secrets.db_test.path)
     cur = conn.cursor()
     cur.execute('DROP TABLE IF EXISTS ciudades')
     cur.execute('CREATE TABLE IF NOT EXISTS ciudades (ciudad TEXT, latitud REAL, longitud REAL, status INTEGER);')
@@ -79,7 +81,7 @@ def test_city_database():
     """
 
     # Crear tabla de ciudades si no existiese.
-    conn = sqlite3.connect('./tests/dashboard_test.db')
+    conn = sqlite3.connect(st.secrets.db_test.path)
     cur = conn.cursor()
     cur.execute('DROP TABLE IF EXISTS ciudades')
     cur.execute('CREATE TABLE IF NOT EXISTS ciudades (ciudad TEXT, latitud REAL, longitud REAL, status INTEGER);')
