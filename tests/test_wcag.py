@@ -1,6 +1,7 @@
-import pandas as pd
 from difflib import SequenceMatcher as SM
-from ..data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability_formattedfile, is_formattedfile_compatible_wcag_version, is_rawfile_compatible_wcag_version
+import pandas as pd
+from ..data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability_formattedfile
+from ..data_api.wcag_operations import is_formattedfile_compatible_wcag_version, is_rawfile_compatible_wcag_version
 from ..data_api.wcag_operations import get_levels_criterion, get_levels_criterion_from_dataframe
 
 
@@ -8,49 +9,47 @@ def test_check_version_compatible_formattedfile():
 
     version_to_test = "2.1"
 
-    result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
-
+    result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', 
+                                                      version_to_test)
     assert result is True
 
     version_to_test = "2.0"
 
-    result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
-
+    result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx',
+                                                      version_to_test)
     assert result is True
 
     version_to_test = "2.2"
 
-    result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', version_to_test)
-
+    result = is_formattedfile_compatible_wcag_version('./tests/WCAG_ayuntamientos_formatted.xlsx', 
+                                                      version_to_test)
     assert result is False
 
 def test_get_levels():
     version_to_test = "2.1"
     configs_wcag = get_config_toml_wcag()
     levels_criterion = get_levels_criterion(version_to_test, configs_wcag)
-    list_of_levels = {element["level"] for element in levels_criterion}
-    
+    list_of_levels = {element["level"] for element in levels_criterion}    
     assert len(list_of_levels) == 3
     assert 'AAA' in list_of_levels
 
-
 def test_get_levels_dataframe():
     data_wcag_subtable = pd.read_excel('./tests/WCAG_ayuntamientos_formatted.xlsx', index_col = 0)
-    levels_criterion = get_levels_criterion_from_dataframe(data_wcag_subtable)
-    
+    levels_criterion = get_levels_criterion_from_dataframe(data_wcag_subtable)    
     assert len(levels_criterion) == 3
     assert 'AAA' in levels_criterion
 
-
 def test_check_version_compatible_rawfile():
-
+    """Comprueba si un fichero es compatible con distintas versiones de wcag
+    """
 
     data_wcag = pd.read_excel('./tests/Datos WCAG Ayuntamientos.xlsx')
 
     num_columns = data_wcag.shape[1]
     
     # Borramos las dos últimas columnas pues son iguales a las dos primeras
-    data_wcag.drop(columns=[data_wcag.columns[num_columns-1],data_wcag.columns[num_columns-2]], inplace = True)
+    data_wcag.drop(columns=[data_wcag.columns[num_columns-1],
+                            data_wcag.columns[num_columns-2]], inplace = True)
 
     # Eliminamos las filas que son todo NA(filas en blanco)
     data_wcag.dropna(how='all', inplace=True)
@@ -78,6 +77,8 @@ def test_check_version_compatible_rawfile():
     assert result is False
 
 def test_check_best_version_compatible_formattedfile():
+    """Comprueba cuál es la mejor versión de wcag para un fichero
+    """
 
     version_compatible = get_best_wcag_compability_formattedfile('./tests/WCAG_ayuntamientos_formatted.xlsx')
     
@@ -106,11 +107,10 @@ def test_wcag_adjust_formattedfile():
 
     criterions_to_check = version_to_test['success_criterion']
 
-    data_wcag_subtable = data_wcag.loc[:,["Sucess_Criterion", "Principles_Guidelines"]] 
+    data_wcag_subtable = data_wcag.loc[:,["Sucess_Criterion", "Principles_Guidelines"]]
     data_wcag_subtable = data_wcag_subtable.dropna()
     data_wcag_subtable = data_wcag_subtable["Principles_Guidelines"]
     data_wcag_subtable = data_wcag_subtable.reset_index(drop=True)
-
     data_wcag_criterions = data_wcag_subtable.tolist()
     
     num_criterions_losts = 0

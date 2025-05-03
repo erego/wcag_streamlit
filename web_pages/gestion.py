@@ -3,7 +3,6 @@ Este módulo se encarga de la gestión de los ficheros de la aplicación. Tiene 
 donde se suben los ficheros en bruto(ficheros raw) y otra donde se hace una ligera limpieza 
 para que luego puedan vsualizarse y sigan un formato wcag (ficheros formatted)
 """
-
 import tomllib
 import pathlib
 import os

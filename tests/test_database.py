@@ -1,3 +1,6 @@
+"""Página para los tests relacionados con la base de datos
+"""
+
 import sqlite3
 import pytest
 
@@ -19,16 +22,16 @@ def test_file_database():
     file = "Datos WCAG Ayuntamientos.xlsx"
     type_file = "raw"
 
-    best_version =  get_best_wcag_compability_formattedfile('./tests/WCAG_ayuntamientos_formatted.xlsx')
+    best_version =  get_best_wcag_compability_formattedfile(
+        './tests/WCAG_ayuntamientos_formatted.xlsx')
 
-    cur.execute("INSERT INTO ficheros(nombre, tipo, mejor_version) VALUES (:file, :type_file, :best_version)",
+    cur.execute("INSERT INTO ficheros(nombre, tipo, mejor_version) " \
+    "VALUES (:file, :type_file, :best_version)",
                      {'file':file, 'type_file': type_file, 'best_version': best_version})
-    
     assert cur.rowcount == 1
 
     conn.commit()
-
-    cur.close()    
+    cur.close()
 
 def test_city_database_wrong():
 
@@ -40,13 +43,13 @@ def test_city_database_wrong():
     conn = sqlite3.connect(st.secrets.db_test.path)
     cur = conn.cursor()
     cur.execute('DROP TABLE IF EXISTS ciudades')
-    cur.execute('CREATE TABLE IF NOT EXISTS ciudades (ciudad TEXT, latitud REAL, longitud REAL, status INTEGER);')
+    cur.execute('CREATE TABLE IF NOT EXISTS ciudades (ciudad TEXT, latitud REAL, ' \
+    'longitud REAL, status INTEGER);')
 
     city="Oursense"
 
     result = get_city_data(city, conn)
 
- 
     if len(result) == 0:
         data_to_insert = get_geocode(city)
         status =  True
@@ -57,21 +60,18 @@ def test_city_database_wrong():
         else:
             lat = data_to_insert["lat"]
             lon = data_to_insert["lng"]
-           
-
+        
         assert status is False
 
-
-        cur.execute("INSERT INTO ciudades (ciudad, latitud, longitud, status) VALUES (:city, :lat, :lon, :status)",
+        cur.execute("INSERT INTO ciudades (ciudad, latitud, longitud, status) " \
+        "VALUES (:city, :lat, :lon, :status)",
                      {'city':city, 'lat': lat, 'lon': lon, 'status': status})
 
         assert cur.rowcount == 1
 
         conn.commit()
 
-        
-
-    cur.close()    
+    cur.close()
 
 
 def test_city_database():
@@ -107,9 +107,7 @@ def test_city_database():
         cur.execute("INSERT INTO ciudades (ciudad, latitud, longitud, status) VALUES (:city, :lat, :lon, :status)",
                      {'city':city, 'lat': lat, 'lon': lon, 'status': status})
 
-        
         assert cur.rowcount == 1
-   
         conn.commit()
 
     result = get_city_data(city, conn)
@@ -124,9 +122,3 @@ def test_city_database():
 
     cur.close()    
          
-
-
-
-
-
-      
