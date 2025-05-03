@@ -1,9 +1,9 @@
+
+import os
 import streamlit as st
 import pandas as pd
-import altair as alt
-from urllib.error import URLError
 
-#st.set_page_config(page_title="Análisis de calidad de los datos", layout="wide")
+
 
 st.subheader("Análisis y gestión de calidad de los datos")
 st.sidebar.subheader("Calidad de los datos", anchor=False)
@@ -12,17 +12,32 @@ st.write(
 )
 
 
-try:
 
-    st.write(
-        """En esta sección veremos algunos posibles problemas y se ofreceran algunas posibles soluciones"""
-    )
-    
-except URLError as e:
-    st.error(
-        """
-        **This demo requires internet access.**
-        Connection error: %s
-    """
-        % e.reason
-    )
+@st.cache_data
+def get_wcag_data(select_fichero):
+    data_wcag = pd.read_excel(select_fichero, index_col = 0)
+    return data_wcag
+
+
+path_formatted= "./data/formatted/"
+lst_ficheros = [path_formatted + element for element in os.listdir(path_formatted)]
+select_fichero = st.selectbox("Elige el fichero con el que trabajar",lst_ficheros,index=None)
+
+
+
+if select_fichero:
+    data_wcag_subtable = get_wcag_data(select_fichero)
+
+    st.data_editor(data_wcag_subtable, key= "edited_wcag", disabled  = ("Sucess_Criterion", "Principles_Guidelines")) 
+
+    st.write(st.session_state["edited_wcag"])
+
+
+import numpy as np
+
+st.data_editor({
+	"st.text_area": "widget",
+	"st.markdown": "element"
+})
+
+
