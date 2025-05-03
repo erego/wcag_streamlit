@@ -61,7 +61,7 @@ def form_callback_delete():
             os.unlink(path_formatted + element)
             st.write( f"Borrado fichero {path_formatted + element }")
 
-            conn = sqlite3.connect('./data/database/dashboard.db')
+            conn = sqlite3.connect(st.secrets.db_production.path)
             delete_fichero_db(element, conn)
             conn.close()
 
@@ -208,7 +208,7 @@ if clean_button:
     data_wcag.to_excel(path_output)
 
     # Insertamos en la base de datos
-    conn = sqlite3.connect('./data/database/dashboard.db')
+    conn = sqlite3.connect(st.secrets.db_production.path)
     insert_fichero_db(new_name, 'formatted', best_version, conn)
     conn.close()
 
