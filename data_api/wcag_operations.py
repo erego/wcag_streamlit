@@ -79,7 +79,7 @@ def is_formattedfile_compatible_wcag_version(path_to_file:str, wcag_version:str)
                 found_criterion = True
                 break
 
-        if found_criterion == False:
+        if not found_criterion:
             is_compatible = False 
             break     
 
@@ -146,7 +146,7 @@ def is_rawfile_compatible_wcag_version(data_wcag:pd.DataFrame, wcag_version:str)
                 found_criterion = True
                 break
 
-        if found_criterion == False:
+        if not found_criterion:
             is_compatible = False 
             break     
 

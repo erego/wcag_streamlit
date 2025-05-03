@@ -33,8 +33,6 @@ if select_fichero:
     st.write(st.session_state["edited_wcag"])
 
 
-import numpy as np
-
 st.data_editor({
 	"st.text_area": "widget",
 	"st.markdown": "element"
