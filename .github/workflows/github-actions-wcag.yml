@@ -19,6 +19,5 @@ jobs:
           python-version: "3.13"
       - uses: streamlit/streamlit-app-action@v0.0.3
         with:
-          app-path: streamlit_app.py
-          skip-smoke: true
+          app-path: app.py
           ruff: true
