@@ -3,8 +3,8 @@ import pytest
 
 import streamlit as st
 
-from wcag.data_api.data_operations import get_geocode, get_city_data
-from wcag.data_api.wcag_operations import get_best_wcag_compability_formattedfile
+from ..data_api.data_operations import get_geocode, get_city_data
+from ..data_api.wcag_operations import get_best_wcag_compability_formattedfile
 
 def test_file_database():
     """Comprueba la inserción de las características de un fichero en la base de datos
