@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - uses: streamlit/streamlit-app-action@v0.0.3
         with:
           app-path: streamlit_app.py
+          skip-smoke: true
           ruff: true
