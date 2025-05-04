@@ -1,3 +1,7 @@
+"""
+    Páginadel chatbot de la aplicación dashboard de la UNED que permite 
+    realizar preguntas al chatbot de huggingface
+"""
 import streamlit as st
 from hugchat import hugchat
 from hugchat.login import Login
@@ -6,6 +10,25 @@ from hugchat.login import Login
 st.subheader("Chatbot de consulta")
 st.sidebar.subheader("Chatbot de consulta", anchor=False)
 
+
+# Function for generating LLM response
+def generate_response(prompt_input, email, passwd):
+    """
+    Función para generar la respuesta del chatnot
+    Args:
+        prompt_input (_type_): prompt introducido por el usuario
+        email (_type_): correo del usuario
+        passwd (_type_): clave del usuario
+
+    Returns:
+        _type_: _description_
+    """
+    # Hugging Face Login
+    sign = Login(email, passwd)
+    cookies = sign.login()
+    # Create ChatBot
+    chatbot = hugchat.ChatBot(cookies=cookies.get_dict())
+    return chatbot.chat(prompt_input)
 
 # Hugging Face Credentials
 with st.sidebar:
@@ -31,15 +54,6 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# Function for generating LLM response
-def generate_response(prompt_input, email, passwd):
-    # Hugging Face Login
-    sign = Login(email, passwd)
-    cookies = sign.login()
-    # Create ChatBot                        
-    chatbot = hugchat.ChatBot(cookies=cookies.get_dict())
-    return chatbot.chat(prompt_input)
-
 # User-provided prompt
 if prompt := st.chat_input(disabled=not (hf_email and hf_pass)):
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -50,7 +64,7 @@ if prompt := st.chat_input(disabled=not (hf_email and hf_pass)):
 if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = generate_response(prompt, hf_email, hf_pass) 
-            st.write(response) 
+            response = generate_response(prompt, hf_email, hf_pass)
+            st.write(response)
     message = {"role": "assistant", "content": response}
     st.session_state.messages.append(message)

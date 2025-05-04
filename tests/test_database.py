@@ -88,8 +88,6 @@ def test_city_database():
 
     city="Cádiz"
     result = get_city_data(city, conn)
-
- 
     if len(result) == 0:
         data_to_insert = get_geocode(city)
         status =  True
@@ -100,8 +98,6 @@ def test_city_database():
         else:
             lat = data_to_insert["lat"]
             lon = data_to_insert["lng"]
-           
-
         assert status is True
 
         cur.execute("INSERT INTO ciudades (ciudad, latitud, longitud, status) VALUES (:city, :lat, :lon, :status)",
@@ -120,5 +116,4 @@ def test_city_database():
     assert lon == pytest.approx(-6.280467)
     assert status == 1
 
-    cur.close()    
-         
+    cur.close()
