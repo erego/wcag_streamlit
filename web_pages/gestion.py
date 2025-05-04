@@ -36,6 +36,8 @@ if upload_file is not None:
         f.write(upload_file.getbuffer())
     st.success("Fichero Almacenado")
 
+st.divider()
+
 col1, col2 = st.columns(2)
 PATH_RAW= "./data/raw/"
 PATH_FORMATTED= "./data/formatted/"
@@ -44,10 +46,12 @@ def form_callback_delete():
     """Callback al pulsar el botón borrar ficheros,
     borra los ficheros y actualiza la base de datos ficheros
     """
+    total_to_delete = 0
     for index, element in enumerate(os.listdir(PATH_RAW)):
         name = 'dynamic_checkbox_raw_' + str(index)
 
         if st.session_state[name] is True:
+            total_to_delete += 1
             os.unlink(PATH_RAW + element)
             st.write( f"Borrado fichero {PATH_RAW + element }")
 
@@ -55,6 +59,7 @@ def form_callback_delete():
         name = 'dynamic_checkbox_formatted_' + str(index)
 
         if st.session_state[name] is True:
+            total_to_delete += 1
             os.unlink(PATH_FORMATTED + element)
             st.write( f"Borrado fichero {PATH_FORMATTED + element }")
 
@@ -62,14 +67,20 @@ def form_callback_delete():
             delete_fichero_db(element, conn)
             conn.close()
 
-with st.form("form_delete"):
+    if total_to_delete == 0:
+        with container_delete:
+            st.warning("Debe seleccionar algún fichero a borrar")
+
+with st.form("form_delete", border=False):
     delete_button = st.form_submit_button("Borra los ficheros seleccionados",
                                           on_click=form_callback_delete)
+    container_delete = st.container()
 
 configs_wcag = get_config_toml_wcag()
 
+st.divider()
 
-with st.form("form_limpieza"):
+with st.form("form_limpieza", border=False):
     st.subheader("Limpieza inicial", anchor=False)
     st.markdown(
     """
@@ -92,7 +103,9 @@ with st.form("form_limpieza"):
     select_fichero = st.selectbox("Elige el fichero con el que trabajar",lst_ficheros,index=None)
     clean_button = st.form_submit_button("Realiza la limpieza")
 
-if clean_button:
+
+if clean_button and select_fichero is not None:
+
     data_wcag = pd.read_excel(select_fichero)
 
     num_columns = data_wcag.shape[1]
@@ -193,6 +206,9 @@ if clean_button:
     conn = sqlite3.connect(st.secrets.db_production.path)
     insert_fichero_db(new_name, 'formatted', best_version, conn)
     conn.close()
+
+elif clean_button and select_fichero is None:
+    st.warning("Debe elegir un fichero del desplegable para hacer la limpieza")
 
 with col1:
     st.subheader("Ficheros en bruto", anchor=False)
