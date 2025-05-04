@@ -206,7 +206,7 @@ if clean_button and select_fichero is not None:
         conn = sqlite3.connect(st.secrets.db_production.path)
         insert_fichero_db(new_name, 'formatted', best_version, conn)
         conn.close()
-    except:
+    except Exception:
         st.warning("El fichero no está en un formato correcto")
 
 elif clean_button and select_fichero is None:
