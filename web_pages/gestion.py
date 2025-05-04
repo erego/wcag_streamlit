@@ -106,106 +106,108 @@ with st.form("form_limpieza", border=False):
 
 if clean_button and select_fichero is not None:
 
-    data_wcag = pd.read_excel(select_fichero)
+    try:
+        data_wcag = pd.read_excel(select_fichero)
+        num_columns = data_wcag.shape[1]
+        # Borramos las dos últimas columnas pues son iguales a las dos primeras
+        data_wcag.drop(columns=[data_wcag.columns[num_columns-1],data_wcag.columns[num_columns-2]],
+                    inplace = True)
+        # Eliminamos las filas que son todo NA(filas en blanco)
+        data_wcag.dropna(how='all', inplace=True)
+        data_wcag.reset_index(drop=True, inplace=True)
+        # Renombramos las primeras dos columnas vacías por otros nombres más significativos
+        data_wcag.rename(columns = {data_wcag.columns[0]: 'Sucess_Criterion',
+                                    data_wcag.columns[1]: 'Principles_Guidelines'},
+                        inplace=True)
 
-    num_columns = data_wcag.shape[1]
-    # Borramos las dos últimas columnas pues son iguales a las dos primeras
-    data_wcag.drop(columns=[data_wcag.columns[num_columns-1],data_wcag.columns[num_columns-2]],
-                   inplace = True)
-    # Eliminamos las filas que son todo NA(filas en blanco)
-    data_wcag.dropna(how='all', inplace=True)
-    data_wcag.reset_index(drop=True, inplace=True)
-    # Renombramos las primeras dos columnas vacías por otros nombres más significativos
-    data_wcag.rename(columns = {data_wcag.columns[0]: 'Sucess_Criterion',
-                                data_wcag.columns[1]: 'Principles_Guidelines'},
-                     inplace=True)
+        cities = data_wcag.columns.values.tolist()[2:]
+        best_version = get_best_wcag_compability_rawfile(data_wcag)
+        principles = get_principles(best_version, configs_wcag)
+        guidelines = get_guidelines(best_version, configs_wcag)
 
-    cities = data_wcag.columns.values.tolist()[2:]
-    best_version = get_best_wcag_compability_rawfile(data_wcag)
-    principles = get_principles(best_version, configs_wcag)
-    guidelines = get_guidelines(best_version, configs_wcag)
+        success_criterion = get_success_criterion(best_version, configs_wcag)
+        # Vamos a insertar las guidelines en el dataframe original que no estaban incluidas
+        for guideline in guidelines:
 
-    success_criterion = get_success_criterion(best_version, configs_wcag)
-    # Vamos a insertar las guidelines en el dataframe original que no estaban incluidas
-    for guideline in guidelines:
+            text_to_find = guideline[0:3]
+            result = data_wcag.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(text_to_find)
+            result = result.loc[result]
+            index_found=result.idxmin()
+            row_to_add = pd.DataFrame({"Principles_Guidelines": guideline},
+                                    index=[index_found])
+            data_wcag = pd.concat([data_wcag.iloc[:index_found], row_to_add,
+                                data_wcag.iloc[index_found:]]).reset_index(drop=True)
+        # Vamos a actualizar la tabla con la versión de wcag con la que sea compatible
+        configs_wcag = get_config_toml_wcag()
 
-        text_to_find = guideline[0:3]
-        result = data_wcag.loc[:, 'Principles_Guidelines'].astype(str).str.startswith(text_to_find)
-        result = result.loc[result]
-        index_found=result.idxmin()
-        row_to_add = pd.DataFrame({"Principles_Guidelines": guideline},
-                                  index=[index_found])
-        data_wcag = pd.concat([data_wcag.iloc[:index_found], row_to_add,
-                               data_wcag.iloc[index_found:]]).reset_index(drop=True)
-    # Vamos a actualizar la tabla con la versión de wcag con la que sea compatible
-    configs_wcag = get_config_toml_wcag()
+        data_wcag_subtable = data_wcag.loc[:,["Sucess_Criterion", "Principles_Guidelines"]]
+        data_wcag_subtable = data_wcag_subtable.dropna()
+        data_wcag_subtable = data_wcag_subtable["Principles_Guidelines"]
+        data_wcag_subtable = data_wcag_subtable.reset_index(drop=True)
+        data_wcag_criterions = data_wcag_subtable.tolist()
 
-    data_wcag_subtable = data_wcag.loc[:,["Sucess_Criterion", "Principles_Guidelines"]]
-    data_wcag_subtable = data_wcag_subtable.dropna()
-    data_wcag_subtable = data_wcag_subtable["Principles_Guidelines"]
-    data_wcag_subtable = data_wcag_subtable.reset_index(drop=True)
-    data_wcag_criterions = data_wcag_subtable.tolist()
+        for version_wcag in configs_wcag:
+            if version_wcag['version'] == best_version:
+                version_to_test = version_wcag
+                break
 
-    for version_wcag in configs_wcag:
-        if version_wcag['version'] == best_version:
-            version_to_test = version_wcag
-            break
+        criterions_to_check = version_to_test['success_criterion']
+        num_criterions_losts = 0
+        for criterion_to_check in criterions_to_check:
+            criterion_to_check=criterion_to_check.replace(":", "")
+            criterion_to_check= criterion_to_check.strip()
+            FOUND_CRITERION = False
+            value_found = False
 
-    criterions_to_check = version_to_test['success_criterion']
-    num_criterions_losts = 0
-    for criterion_to_check in criterions_to_check:
-        criterion_to_check=criterion_to_check.replace(":", "")
-        criterion_to_check= criterion_to_check.strip()
-        FOUND_CRITERION = False
-        value_found = False
+            # Buscamos el criterio en la tabla o alguno similar
+            for value in data_wcag_criterions:
 
-        # Buscamos el criterio en la tabla o alguno similar
-        for value in data_wcag_criterions:
+                # Tienen que pertenecer al mismo criterio
+                excel_criterion = value.replace(":", "")
+                excel_criterion = excel_criterion.strip()
+                if excel_criterion.split()[0] != criterion_to_check.split()[0]:
+                    continue
 
-            # Tienen que pertenecer al mismo criterio
-            excel_criterion = value.replace(":", "")
-            excel_criterion = excel_criterion.strip()
-            if excel_criterion.split()[0] != criterion_to_check.split()[0]:
-                continue
-
-            if criterion_to_check != excel_criterion:
-                if excel_criterion in criterion_to_check:
-                    data_wcag.loc[data_wcag['Principles_Guidelines'] == value,
-                                  'Principles_Guidelines'] = criterion_to_check
-                    FOUND_CRITERION = True
-                    value_found = value
-                    break
-                else:
-                    similitud = SM(None, criterion_to_check, value.strip()).ratio()
-                    if similitud >= 0.70:
+                if criterion_to_check != excel_criterion:
+                    if excel_criterion in criterion_to_check:
                         data_wcag.loc[data_wcag['Principles_Guidelines'] == value,
-                                      'Principles_Guidelines'] = criterion_to_check
+                                    'Principles_Guidelines'] = criterion_to_check
                         FOUND_CRITERION = True
                         value_found = value
                         break
+                    else:
+                        similitud = SM(None, criterion_to_check, value.strip()).ratio()
+                        if similitud >= 0.70:
+                            data_wcag.loc[data_wcag['Principles_Guidelines'] == value,
+                                        'Principles_Guidelines'] = criterion_to_check
+                            FOUND_CRITERION = True
+                            value_found = value
+                            break
+                else:
+                    data_wcag.loc[data_wcag['Principles_Guidelines'] == value,
+                                    'Principles_Guidelines'] = criterion_to_check
+
+                    FOUND_CRITERION = True
+                    value_found = value
+
+            if FOUND_CRITERION is False:
+                num_criterions_losts+=1
             else:
-                data_wcag.loc[data_wcag['Principles_Guidelines'] == value,
-                                  'Principles_Guidelines'] = criterion_to_check
+                data_wcag_criterions.remove(value_found)
 
-                FOUND_CRITERION = True
-                value_found = value
+        # Sacamos el fichero a un excel formateado
+        path = pathlib.Path(select_fichero)
 
-        if FOUND_CRITERION is False:
-            num_criterions_losts+=1
-        else:
-            data_wcag_criterions.remove(value_found)
+        new_name = path.stem + "_formatted" + path.suffix
+        path_output = pathlib.Path(path.parent.parent).joinpath('formatted', new_name)
+        data_wcag.to_excel(path_output)
 
-    # Sacamos el fichero a un excel formateado
-    path = pathlib.Path(select_fichero)
-
-    new_name = path.stem + "_formatted" + path.suffix
-    path_output = pathlib.Path(path.parent.parent).joinpath('formatted', new_name)
-    data_wcag.to_excel(path_output)
-
-    # Insertamos en la base de datos
-    conn = sqlite3.connect(st.secrets.db_production.path)
-    insert_fichero_db(new_name, 'formatted', best_version, conn)
-    conn.close()
+        # Insertamos en la base de datos
+        conn = sqlite3.connect(st.secrets.db_production.path)
+        insert_fichero_db(new_name, 'formatted', best_version, conn)
+        conn.close()
+    except:
+        st.warning("El fichero no está en un formato correcto")
 
 elif clean_button and select_fichero is None:
     st.warning("Debe elegir un fichero del desplegable para hacer la limpieza")
