@@ -29,6 +29,7 @@ jobs:
           path: test-results.xml
           summary: true
           display-options: fEX
-      - name: Run backend tests with coverage
+
+      - name: Run tests with coverage
         run: |
           pytest --cov=wcag --cov=data_api --cov=web_pages tests/
