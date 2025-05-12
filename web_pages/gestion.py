@@ -120,7 +120,7 @@ if clean_button and select_fichero is not None:
                                     data_wcag.columns[1]: 'Principles_Guidelines'},
                         inplace=True)
 
-        cities = data_wcag.columns.values.tolist()[2:]
+        locations = data_wcag.columns.values.tolist()[2:]
         best_version = get_best_wcag_compability_rawfile(data_wcag)
         principles = get_principles(best_version, configs_wcag)
         guidelines = get_guidelines(best_version, configs_wcag)
@@ -206,7 +206,8 @@ if clean_button and select_fichero is not None:
         conn = sqlite3.connect(st.secrets.db_production.path)
         insert_fichero_db(new_name, 'formatted', best_version, conn)
         conn.close()
-    except Exception:
+    except Exception as exc:
+        st.write(exc)
         st.warning("El fichero no está en un formato correcto")
 
 elif clean_button and select_fichero is None:

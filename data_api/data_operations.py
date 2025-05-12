@@ -23,27 +23,27 @@ def get_statistics_data(data_wcag_subtable):
     max_serie = data_wcag_subtable_statistics.max(axis = 0)
     min_serie = data_wcag_subtable_statistics.min(axis = 0)
 
-    dict_max_cities = dict()
+    dict_max_locations = dict()
     for index, value in max_serie.items():
         result_column = data_wcag_subtable_statistics.loc[:,index]
         result_column = result_column[result_column == value].index.tolist()
         result_column.sort()
-        dict_max_cities[index] = result_column
+        dict_max_locations[index] = result_column
 
 
-    dict_min_cities = dict()
+    dict_min_locations = dict()
     for index, value in min_serie.items():
         result_column = data_wcag_subtable_statistics.loc[:,index]
         result_column = result_column[result_column == value].index.tolist()
         result_column.sort()
-        dict_min_cities[index] = result_column
+        dict_min_locations[index] = result_column
 
 
-    max_serie_cities = pd.Series(dict_max_cities)
-    max_serie_cities.name = 'Mejores ciudades'
+    max_serie_locations = pd.Series(dict_max_locations)
+    max_serie_locations.name = 'Mejores localizaciones'
     max_serie.name = 'Valor máximo'
-    min_serie_cities = pd.Series(dict_min_cities)
-    min_serie_cities.name = 'Peores ciudades'
+    min_serie_locations = pd.Series(dict_min_locations)
+    min_serie_locations.name = 'Peores localizaciones'
     min_serie.name = 'Valor mínimo'
     total_valores_serie = data_wcag_subtable_statistics.count(axis = 0)
     total_valores_serie.name = 'Total Valores'
@@ -59,37 +59,40 @@ def get_statistics_data(data_wcag_subtable):
     median_serie = data_wcag_subtable_statistics.mean(axis = 0)
     median_serie.name = 'Mediana'
     result_statistics = pd.concat([total_valores_serie, valores_nulos_serie, 
-                                   cardinalidad_serie, mean_serie, median_serie, max_serie_cities, max_serie,
-                                    min_serie_cities, min_serie], axis = 1) 
+                                   cardinalidad_serie, mean_serie, median_serie, max_serie_locations, max_serie,
+                                    min_serie_locations, min_serie], axis = 1) 
     return result_statistics
 
-def get_geocode(ciudad:str):
-    """Llamada a la api de cartociudad para obtener datos geográficos de la ciudad
+def get_geocode(localizacion:str):
+    """Llamada a la api de cartociudad para obtener datos geográficos de la localización
 
     Args:
-        ciudad (str): Nombre de la ciudad a buscar
+        location (str): Nombre de la localización a buscar
 
     Returns:
        python dictionary: Diccionario de python con los datos geográficos de la ciudad
     """
-    ciudad = urllib.parse.quote(ciudad)
-    url = f'http://www.cartociudad.es/geocoder/api/geocoder/findJsonp?q={ciudad}'
+    localizacion = urllib.parse.quote(localizacion)
+    url = f'http://www.cartociudad.es/geocoder/api/geocoder/findJsonp?q={localizacion}'
     r = requests.get(url)
     result = r.text.replace('callback(', '')[:-1]
-    result = json.loads(result)
+    try:
+        result = json.loads(result)
+        return result or None
+    except json.JSONDecodeError as error:
+        print(error)
+        return None
 
-    return result or None
+def get_location_data(location: str, connection):
 
-def get_city_data(city: str, connection):
-
-    """Obtiene los datos de una ciudad de la base de datos
+    """Obtiene los datos de una localización de la base de datos
 
     Returns:
-        list: Los datos de la base de datos para la ciudad solicitada
+        list: Los datos de la base de datos para la localización solicitada
     """
    
     cur = connection.cursor()
-    cur.execute("SELECT latitud, longitud, status FROM ciudades where ciudad = :city", {'city':city})
+    cur.execute("SELECT latitud, longitud, status FROM localizaciones where descripcion = :location", {'location':location})
     result = cur.fetchall()
     cur.close()
     return result
@@ -142,20 +145,20 @@ def delete_fichero_db(nombre:str, connection):
     cur.close()
 
 
-def insert_city_db(city: str, lat: float, lon:float, status:bool, connection):
-    """Esta función inserta una ciudad junto a su latitud, longitud y estado en la base de datos
+def insert_location_db(location: str, lat: float, lon:float, status:bool, connection):
+    """Esta función inserta una localizacion junto a su latitud, longitud y estado en la base de datos
 
     Args:
-        city (str): Nombre de la ciudad
-        lat (float): Latitud geográfica de la ciudad
-        lon (float): Longitud geográfica de la ciudad
+        location (str): Nombre de la localización
+        lat (float): Latitud geográfica de la localización
+        lon (float): Longitud geográfica de la localización
         status (bool): Validez de los datos geográficos
         connection (_type_): Conexión a la base de datos
     """
     cur = connection.cursor()
-    cur.execute('CREATE TABLE IF NOT EXISTS ciudades (ciudad TEXT, latitud REAL, longitud REAL, status INTEGER);')
-    cur.execute("INSERT INTO ciudades (ciudad, latitud, longitud, status) VALUES (:city, :lat, :lon, :status)",
-                     {'city':city, 'lat': lat, 'lon': lon, 'status': status})
+    cur.execute('CREATE TABLE IF NOT EXISTS localizaciones (descripcion TEXT, latitud REAL, longitud REAL, status INTEGER);')
+    cur.execute("INSERT INTO localizaciones (descripcion, latitud, longitud, status) VALUES (:location, :lat, :lon, :status)",
+                     {'location':location, 'lat': lat, 'lon': lon, 'status': status})
     
     connection.commit()
     cur.close()

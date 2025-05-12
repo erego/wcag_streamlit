@@ -3,7 +3,7 @@ import pandas as pd
 from ..data_api.wcag_operations import get_config_toml_wcag, get_best_wcag_compability_formattedfile
 from ..data_api.wcag_operations import is_formattedfile_compatible_wcag_version, is_rawfile_compatible_wcag_version
 from ..data_api.wcag_operations import get_levels_criterion, get_levels_criterion_from_dataframe
-
+from ..data_api.wcag_operations import get_level_from_criterion
 
 def test_check_version_compatible_formattedfile():
     """Comprueba si un fichero es compatible con diferentes versiones
@@ -23,6 +23,15 @@ def test_check_version_compatible_formattedfile():
                                                       version_to_test)
     assert result is False
 
+def test_get_level_from_criterion():
+    """Comprueba el nivel de un criterio
+    """
+    version_to_test = "2.1"
+    criterion_to_test= "1.2.6 Sign Language (Prerecorded)"
+    configs_wcag = get_config_toml_wcag()
+    result = get_level_from_criterion(version_to_test, configs_wcag, criterion_to_test)
+    assert result == "AAA"
+
 def test_get_levels():
     """Comprueba los niveles que puede tener una versión de wcag
     """
@@ -38,7 +47,7 @@ def test_get_levels_dataframe():
     levels_criterion = get_levels_criterion_from_dataframe(data_wcag_subtable)
     assert len(levels_criterion) == 3
     assert 'AAA' in levels_criterion
-
+  
 def test_check_version_compatible_rawfile():
     """Comprueba si un fichero es compatible con distintas versiones de wcag
     """
@@ -59,7 +68,7 @@ def test_check_version_compatible_rawfile():
     version_to_test = "2.1"
 
     result = is_rawfile_compatible_wcag_version(data_wcag, version_to_test)
-
+  
     assert result is True
 
     version_to_test = "2.0"
@@ -73,6 +82,29 @@ def test_check_version_compatible_rawfile():
     result = is_rawfile_compatible_wcag_version(data_wcag, version_to_test)
 
     assert result is False
+
+def test_check_version_compatible_rawfile_museo():
+
+    """Comprueba si el fichero de museos es compatible con diferentes versiones
+    """
+
+    data_wcag = pd.read_excel('./tests/Datos WCAG Museos.xlsx')
+
+    num_columns = data_wcag.shape[1]
+    # Borramos las dos últimas columnas pues son iguales a las dos primeras
+    data_wcag.drop(columns=[data_wcag.columns[num_columns-1],
+                            data_wcag.columns[num_columns-2]], inplace = True)
+    # Eliminamos las filas que son todo NA(filas en blanco)
+    data_wcag.dropna(how='all', inplace=True)
+    data_wcag.reset_index(drop=True, inplace=True)
+
+    # Renombramos las primeras dos columnas vacías por otros nombres más significativos
+    data_wcag.rename(columns = {data_wcag.columns[0]: 'Sucess_Criterion', data_wcag.columns[1]: 'Principles_Guidelines'}, inplace=True)
+
+    version_to_test = "2.1"
+
+    result = is_rawfile_compatible_wcag_version(data_wcag, version_to_test)
+    assert result is True
 
 def test_check_best_version_compatible_formattedfile():
     """Comprueba cuál es la mejor versión de wcag para un fichero

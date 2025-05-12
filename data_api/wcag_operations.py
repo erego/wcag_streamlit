@@ -48,7 +48,14 @@ def is_formattedfile_compatible_wcag_version(path_to_file:str, wcag_version:str)
     # Recorremos los criterios segun la configuración de esa versión a comprobar
     criterions_to_check = version_config_to_test['success_criterion']
 
+    leves_in_dataframe = get_levels_criterion_from_dataframe(data_wcag)
+
     for criterion_to_check in criterions_to_check:
+
+        level_to_check = get_level_from_criterion(wcag_version, config_versions_wcag, criterion_to_check)
+        if level_to_check not in leves_in_dataframe:
+            continue
+
         criterion_to_check=criterion_to_check.replace(":", "")
         found_criterion = False
 
@@ -113,10 +120,18 @@ def is_rawfile_compatible_wcag_version(data_wcag:pd.DataFrame, wcag_version:str)
     data_wcag_criterions = data_wcag_subtable.tolist()
     
     is_compatible = True
+
     # Recorremos los criterios segun la configuración de esa versión a comprobar
     criterions_to_check = version_config_to_test['success_criterion']
 
+    leves_in_dataframe = get_levels_criterion_from_dataframe(data_wcag)
+
     for criterion_to_check in criterions_to_check:
+            
+        level_to_check = get_level_from_criterion(wcag_version, config_versions_wcag, criterion_to_check)
+        if level_to_check not in leves_in_dataframe:
+            continue
+
         criterion_to_check=criterion_to_check.replace(":", "")
         found_criterion = False
 
@@ -283,4 +298,18 @@ def get_levels_criterion_from_dataframe(dataframe_levels:pd.DataFrame):
     levels_column.sort()
     return levels_column
 
-                                    
+
+def get_level_from_criterion(version_wcag:str, configs_wcag, criterion:str):
+    """Obtiene el nivel asociado a un criterio de una versión de wcag
+
+        Args:
+        version_wcag (str): Versión wcag elegida
+        configs_wcag (dictionary): Diccionario de configuración de versiones wcag
+        criterion (str): Criterio del que obtener el nivel
+    Returns:
+        str: Level de dicho criterio
+    """
+    levels_criterion = get_levels_criterion(version_wcag, configs_wcag)
+    for level_criterion in levels_criterion:
+        if level_criterion["criterion"] == criterion:
+            return level_criterion["level"]

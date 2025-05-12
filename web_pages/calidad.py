@@ -30,19 +30,19 @@ def get_wcag_data(select_fichero):
     return data_wcag
 
 
-def get_wcag_cities(select_fichero):
-    """Obtiene el listado de ciudades de un fichero de accesibilidad
+def get_wcag_locations(select_fichero):
+    """Obtiene el listado de localizaciones de un fichero de accesibilidad
 
     Args:
         select_fichero (_type_): Ruta del fichero a leer
 
     Returns:
-        _type_: Lista de las ciudades que lo componen
+        _type_: Lista de las localizaciones que lo componen
     """
     data_wcag = pd.read_excel(select_fichero)
-    cities = data_wcag.columns.values.tolist()[3:]
-    cities.sort()
-    return cities
+    locations = data_wcag.columns.values.tolist()[3:]
+    locations.sort()
+    return locations
 
 
 PATH_FORMATTED= "./data/formatted/"
@@ -51,30 +51,30 @@ select_fichero = st.selectbox("Elige el fichero con el que trabajar",lst_fichero
 
 st.divider()
 
-st.subheader("Modificación de ciudades", anchor=False)
+st.subheader("Modificación de localizaciones", anchor=False)
 st.markdown(
 """
         En esta sección se puede modificar los nombres de
-        las ciudades con problemas y almacenarlos.
+        las localizaciones con problemas y almacenarlos.
 """
 )
 
 if select_fichero:
-    with st.form("form_update_cities", border=False):
+    with st.form("form_update_locations", border=False):
         conn = sqlite3.connect(st.secrets.db_production.path)
         cur = conn.cursor()
-        cur.execute("SELECT ciudad FROM ciudades where status=0")
-        all_cities = get_wcag_cities(select_fichero)
+        cur.execute("SELECT descripcion FROM localizaciones where status=0")
+        all_locations = get_wcag_locations(select_fichero)
         results = cur.fetchall()
         result_list = [result[0] for result in results]
         cur.close()
         conn.close()
 
-        list_to_modify = [element for element in result_list if element in all_cities]
+        list_to_modify = [element for element in result_list if element in all_locations]
 
         st.write(list_to_modify)
 
-        update_cities_button = st.form_submit_button("Realiza la modificación")
+        update_locations_button = st.form_submit_button("Realiza la modificación")
 
 st.divider()
 

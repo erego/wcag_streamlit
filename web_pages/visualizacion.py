@@ -1,7 +1,7 @@
 """
 En este fichero podremos visualizar el dataframe asociado al fichero seleccionado, realizar filtros
 y ver diferentes métricas asociadas a dicho dataframe. También visualizaremos sobre un mapa
-las ciudades seleccionadas
+las localizaciones seleccionadas
 """
 
 import os
@@ -10,7 +10,7 @@ import sqlite3
 import streamlit as st
 import pandas as pd
 
-from data_api.data_operations import get_geocode, get_city_data, insert_city_db, get_fichero_db
+from data_api.data_operations import get_geocode, get_location_data, insert_location_db, get_fichero_db
 from data_api.data_operations import get_statistics_data
 from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion
 from data_api.wcag_operations import get_guidelines, get_levels_criterion_from_dataframe
@@ -35,19 +35,19 @@ def get_wcag_data(select_fichero):
     return data_wcag
 
 @st.cache_data
-def get_wcag_cities(select_fichero):
-    """Obtiene el listado de ciudades de un fichero de accesibilidad
+def get_wcag_locations(select_fichero):
+    """Obtiene el listado de localizaciones de un fichero de accesibilidad
 
     Args:
         select_fichero (_type_): Ruta del fichero a leer
 
     Returns:
-        _type_: Lista de las ciudades que lo componen
+        _type_: Lista de las localizaciones que lo componen
     """
     data_wcag = pd.read_excel(select_fichero)
-    cities = data_wcag.columns.values.tolist()[3:]
-    cities.sort()
-    return cities
+    locations = data_wcag.columns.values.tolist()[3:]
+    locations.sort()
+    return locations
 
 if 'versions_wcag' not in st.session_state:
     st.session_state['versions_wcag'] = get_config_toml_wcag()
@@ -135,31 +135,31 @@ if select_fichero:
         data_wcag_subtable = data_wcag_subtable[data_wcag_subtable['Sucess_Criterion'].isin(lst_levels_filter) | data_wcag_subtable['Sucess_Criterion'].isnull()]
 
 
-    all_cities = get_wcag_cities(select_fichero)
-    select_cities = st.sidebar.multiselect(
-        "Elige las ciudades", all_cities, 
+    all_locations = get_wcag_locations(select_fichero)
+    select_locations = st.sidebar.multiselect(
+        "Elige las localizaciones", all_locations, 
     )
 
-    if select_cities:
+    if select_locations:
         data_wcag_subtable = data_wcag_subtable.loc[:,["Sucess_Criterion",
-                                                       "Principles_Guidelines"] + select_cities]
-        selected_cities = select_cities
+                                                       "Principles_Guidelines"] + select_locations]
+        selected_locations = select_locations
     else:
-        selected_cities = all_cities
+        selected_locations = all_locations
 
     selected_lats = []
     selected_lons = []
     conn = sqlite3.connect(st.secrets.db_production.path)
 
-    for city in selected_cities:
-        # Comprobamos si la ciudad está en la base de datos y si no llamamos al api
-        result_db = get_city_data(city, conn)
+    for location in selected_locations:
+        # Comprobamos si la localización está en la base de datos y si no llamamos al api
+        result_db = get_location_data(location, conn)
         if len(result_db) ==1 :
             lat = result_db[0][0]
             lon = result_db[0][1]
             status = result_db[0][2]
         else:
-            data = get_geocode(city)
+            data = get_geocode(location)
             if data is None:
                 lat = 0
                 lon = 0
@@ -170,7 +170,7 @@ if select_fichero:
                 status = True
 
             # Insertamos en la base de datos porque no existe
-            insert_city_db(city, lat, lon, status, conn)
+            insert_location_db(location, lat, lon, status, conn)
 
         selected_lats.append(lat)
         selected_lons.append(lon)
@@ -213,7 +213,7 @@ if select_fichero:
     st.bar_chart(data_wcag_subtable_statistics, y=["Cardinalidad"], color=["#f9dfd6"],)
 
     dataframe_geo = pd.DataFrame({
-        'ciudad' : selected_cities,
+        'location' : selected_locations,
         'lat': selected_lats,
         'lon': selected_lons })
 
@@ -237,6 +237,6 @@ if select_fichero:
                     get_radius=15000,
                 ),
             ],
-            tooltip={"text": "{ciudad}"},
+            tooltip={"text": "{location}"},
         )
     )
