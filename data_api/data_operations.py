@@ -70,7 +70,7 @@ def get_geocode(localizacion:str):
         location (str): Nombre de la localización a buscar
 
     Returns:
-       python dictionary: Diccionario de python con los datos geográficos de la ciudad
+       python dictionary: Diccionario de python con los datos geográficos de la localización
     """
     localizacion = urllib.parse.quote(localizacion)
     url = f'http://www.cartociudad.es/geocoder/api/geocoder/findJsonp?q={localizacion}'
