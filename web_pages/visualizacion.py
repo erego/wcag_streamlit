@@ -21,7 +21,6 @@ st.write(
     """Esta página permite filtrar y visualizar la tabla de WCAG de ayuntamientos"""
 )
 
-@st.cache_data
 def get_wcag_data(select_fichero):
     """Lee el fichero excel de accesibilidad a una estructura pandas DataFrame
 
@@ -34,7 +33,6 @@ def get_wcag_data(select_fichero):
     data_wcag = pd.read_excel(select_fichero, index_col = 0)
     return data_wcag
 
-@st.cache_data
 def get_wcag_locations(select_fichero):
     """Obtiene el listado de localizaciones de un fichero de accesibilidad
 

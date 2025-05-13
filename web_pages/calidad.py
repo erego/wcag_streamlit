@@ -7,7 +7,7 @@ import sqlite3
 import streamlit as st
 import pandas as pd
 
-
+from data_api.data_operations import get_geocode, get_location_data
 
 st.subheader("Análisis y gestión de calidad de los datos")
 st.sidebar.subheader("Calidad de los datos", anchor=False)
@@ -44,6 +44,50 @@ def get_wcag_locations(select_fichero):
     locations.sort()
     return locations
 
+def form_callback_modify_location():
+    """Callback al pulsar el modificar la localización
+    """
+
+    if st.session_state["select_localizacion"] and st.session_state["localizacion_modified"]:
+ 
+        # Modificamos el valor en la base de datos
+        location=st.session_state["localizacion_modified"]
+
+        data_to_insert = get_geocode(location)
+        status =  True
+        if data_to_insert is None:
+            lat = 0.0
+            lon = 0.0
+            status =  False
+        else:
+            lat = data_to_insert["lat"]
+            lon = data_to_insert["lng"]
+
+
+        if status is False:
+            with container_update_location:
+                st.warning("La nueva descripción no da un valor geográfico válido")
+
+        else:
+            
+            conn = sqlite3.connect(st.secrets.db_production.path)
+            cur = conn.cursor()
+            cur.execute("UPDATE localizaciones SET descripcion = :location, latitud = :lat, longitud = :lon, status = :status WHERE descripcion = :old_description",
+                        {'location':location, 'lat': lat, 'lon': lon, 'old_description': st.session_state["select_localizacion"], 'status': status})
+
+            conn.commit()
+            cur.close()
+            
+            with container_update_location:
+                st.info("Valor modificado correctamente")
+
+        # Modificamos el valor en la base de datos el valor en el excel
+        data_wcag_subtable = get_wcag_data(select_fichero)
+        data_wcag_subtable.rename(columns={st.session_state["select_localizacion"]: st.session_state["localizacion_modified"]}, inplace=True)
+        data_wcag_subtable.to_excel(select_fichero)
+    else:
+        with container_update_location:
+            st.warning("Debe seleccionar La localización a modificar y agregar la nueva descripción")
 
 PATH_FORMATTED= "./data/formatted/"
 lst_ficheros = [PATH_FORMATTED + element for element in os.listdir(PATH_FORMATTED)]
@@ -56,6 +100,7 @@ st.markdown(
 """
         En esta sección se puede modificar los nombres de
         las localizaciones con problemas y almacenarlos.
+        Los valores con error aparecerán en la lista desplegable
 """
 )
 
@@ -69,12 +114,15 @@ if select_fichero:
         result_list = [result[0] for result in results]
         cur.close()
         conn.close()
-
-        list_to_modify = [element for element in result_list if element in all_locations]
-
-        st.write(list_to_modify)
-
-        update_locations_button = st.form_submit_button("Realiza la modificación")
+        col1, col2 = st.columns(2)
+        list_to_modify = [element for element in result_list if element in all_locations]    
+        with col1:           
+            st.selectbox("Elige la localizacion a modificar",list_to_modify, key="select_localizacion",index=None)
+        with col2:
+            st.text_input('Introduce el nuevo valor', key="localizacion_modified")
+        update_locations_button = st.form_submit_button("Realiza la modificación",
+                                          on_click=form_callback_modify_location)
+        container_update_location = st.container()
 
 st.divider()
 

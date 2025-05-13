@@ -81,6 +81,68 @@ def test_location():
     data_to_test = data_return["address"]
     assert data_to_test=='MUSEO DE LA CIENCIA DE VALLADOLID'
 
+def test_location_modify_database():
+
+    """
+    Comprueba la modificación en la tabla localizaciones
+    """
+
+    # Crear tabla de localizaciones si no existiese.
+    conn = sqlite3.connect(st.secrets.db_test.path)
+    cur = conn.cursor()
+    cur.execute('DROP TABLE IF EXISTS localizaciones')
+    cur.execute('CREATE TABLE IF NOT EXISTS localizaciones (descripcion TEXT, latitud REAL, longitud REAL, status INTEGER);')
+
+    location_old="Oursense"
+    result = get_location_data(location_old, conn)
+    if len(result) == 0:
+        data_to_insert = get_geocode(location_old)
+        status =  True
+        if data_to_insert is None:
+            lat = 0.0
+            lon = 0.0
+            status =  False
+        else:
+            lat = data_to_insert["lat"]
+            lon = data_to_insert["lng"]
+
+        cur.execute("INSERT INTO localizaciones (descripcion, latitud, longitud, status) VALUES (:location, :lat, :lon, :status)",
+                     {'location':location_old, 'lat': lat, 'lon': lon, 'status': status})
+
+        assert cur.rowcount == 1
+        conn.commit()
+
+    location="Ourense"
+    result = get_location_data(location, conn)
+    data_to_insert = get_geocode(location)
+    status =  True
+    if data_to_insert is None:
+        lat = 0.0
+        lon = 0.0
+        status =  False
+    else:
+        lat = data_to_insert["lat"]
+        lon = data_to_insert["lng"]
+
+    assert status is True
+
+    cur.execute("UPDATE localizaciones SET descripcion = :location, latitud = :lat, longitud = :lon, status = :status WHERE descripcion = :old_description",
+                     {'location':location, 'lat': lat, 'lon': lon, 'old_description': location_old, 'status': status})
+
+    conn.commit()
+
+    result = get_location_data(location, conn)
+
+    lat = result[0][0]
+    lon = result[0][1]
+    status = result[0][2]
+
+    assert lat == pytest.approx(42.3385705)
+    assert lon == pytest.approx(-7.86427465)
+    assert status == 1
+
+    cur.close()
+
 def test_location_database():
 
     """
