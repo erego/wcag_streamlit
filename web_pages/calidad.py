@@ -7,7 +7,7 @@ import sqlite3
 import streamlit as st
 import pandas as pd
 
-from data_api.data_operations import get_geocode, get_location_data
+from data_api.data_operations import get_geocode
 
 st.subheader("Análisis y gestión de calidad de los datos")
 st.sidebar.subheader("Calidad de los datos", anchor=False)
