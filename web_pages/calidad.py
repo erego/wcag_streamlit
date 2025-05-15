@@ -146,3 +146,38 @@ if select_fichero:
     if update_dataframe_button:
         get_wcag_data.clear()
         df_edited.to_excel(select_fichero)
+
+st.divider()
+
+st.subheader("Informe de calidad", anchor=False)
+st.markdown(
+"""
+        En esta sección se puede ver un informe de calidad
+        de datos.
+"""
+)
+
+if select_fichero:
+
+    data_wcag_subtable = get_wcag_data(select_fichero)
+    filtered_df = data_wcag_subtable[data_wcag_subtable['Sucess_Criterion'].notna()]
+
+
+    # Veamos si existe algún valor nulo que no debería
+    filtered_null = filtered_df[filtered_df.isnull().any(axis=1)]
+
+    if filtered_null.shape[0] > 0:
+        st.info("Las siguientes filas del dataframe tienen algún valor nulo y habría que editarlas")
+        st.dataframe(filtered_null)
+    else:
+        st.info("No hay filas del dataframe que tenga algún valor nulo y no debiese tenerlo")
+
+    # Veamos si existe algún valor anómalo que no debería (valores que no estén en la escala likert de 1 a 5)
+    filtered_outlier= filtered_df.select_dtypes(include=['float64'])
+    filtered_outlier = filtered_outlier[filtered_outlier[(filtered_outlier > 5) | (filtered_outlier< 1)]].dropna()
+
+    if filtered_outlier.shape[0] > 0:
+        st.info("Las siguientes filas del dataframe tienen algún fuera de la escala Likert: 1-5")
+        st.dataframe(filtered_outlier)
+    else:
+        st.info("No hay filas del dataframe que tenga algún valor fuera de la escala Likert: 1-5")
