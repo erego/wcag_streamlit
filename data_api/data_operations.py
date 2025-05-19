@@ -56,10 +56,12 @@ def get_statistics_data(data_wcag_subtable):
     #moda_serie.name = 'Moda'
     mean_serie = data_wcag_subtable_statistics.mean(axis = 0)
     mean_serie.name = 'Media'
-    median_serie = data_wcag_subtable_statistics.mean(axis = 0)
+    median_serie = data_wcag_subtable_statistics.median(axis = 0)
     median_serie.name = 'Mediana'
+    std_serie = data_wcag_subtable_statistics.std(axis = 0)
+    std_serie.name = 'std'
     result_statistics = pd.concat([total_valores_serie, valores_nulos_serie, 
-                                   cardinalidad_serie, mean_serie, median_serie, max_serie_locations, max_serie,
+                                   cardinalidad_serie, mean_serie, median_serie, std_serie, max_serie_locations, max_serie,
                                     min_serie_locations, min_serie], axis = 1) 
     return result_statistics
 

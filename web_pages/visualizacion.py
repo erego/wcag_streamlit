@@ -178,7 +178,7 @@ if select_fichero:
 
     st.dataframe(data_wcag_subtable)
 
-    st.markdown("# Informe de calidad de los datos")
+    st.markdown("# Informe de los datos")
     st.write(
         """Esta sección permite visualizar caraterísticas de los datos """
     )
@@ -186,6 +186,10 @@ if select_fichero:
     data_wcag_subtable_statistics = get_statistics_data(data_wcag_subtable)
     st.dataframe(data_wcag_subtable_statistics)
 
+
+    select_likert = st.selectbox("Elige la escala Likert a visualizar",["De 5 puntos", "De 3 puntos"],index=0)
+
+    
     data_stacked = data_wcag_subtable.copy()
     data_stacked = data_stacked.dropna()
     data_stacked.drop('Sucess_Criterion', axis=1, inplace=True)
@@ -196,11 +200,24 @@ if select_fichero:
         series_valor = value.value_counts().sort_index()
         row_dict = {}
         row_dict["Principles_Guidelines"]=index
-        row_dict["1: No conseguido"] = series_valor.at[1.0] if 1.0 in series_valor.index  else 0
-        row_dict["2: Parcialmente conseguido"] = series_valor.at[2.0] if 2.0 in series_valor.index  else 0
-        row_dict["3: No aplicable"] = series_valor.at[3.0] if 3.0 in series_valor.index  else 0
-        row_dict["4: Ampliamente conseguido"] = series_valor.at[4.0] if 4.0 in series_valor.index  else 0
-        row_dict["5: Totalmente conseguido"] = series_valor.at[5.0] if 5.0 in series_valor.index  else 0
+        if select_likert and select_likert == "De 3 puntos":
+            result_1= series_valor.at[1.0] if 1.0 in series_valor.index  else 0
+            result_2= series_valor.at[2.0] if 2.0 in series_valor.index  else 0
+            row_dict["1: No conseguido"] = result_1 + result_2
+        else:
+            row_dict["1: No conseguido"] = series_valor.at[1.0] if 1.0 in series_valor.index  else 0
+            row_dict["2: Parcialmente conseguido"] = series_valor.at[2.0] if 2.0 in series_valor.index  else 0
+        if select_likert and select_likert == "De 3 puntos":
+            row_dict["2: No aplicable"] = series_valor.at[3.0] if 3.0 in series_valor.index  else 0
+        else:
+            row_dict["3: No aplicable"] = series_valor.at[3.0] if 3.0 in series_valor.index  else 0
+        if select_likert and select_likert == "De 3 puntos":
+            result_4= series_valor.at[4.0] if 4.0 in series_valor.index  else 0
+            result_5= series_valor.at[5.0] if 5.0 in series_valor.index  else 0
+            row_dict["3: Totalmente conseguido"] = result_4 + result_5
+        else:
+            row_dict["4: Ampliamente conseguido"] = series_valor.at[4.0] if 4.0 in series_valor.index  else 0
+            row_dict["5: Totalmente conseguido"] = series_valor.at[5.0] if 5.0 in series_valor.index  else 0
         list_rows.append(row_dict)
 
     data_stacked = pd.DataFrame(list_rows)
