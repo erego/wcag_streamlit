@@ -17,14 +17,17 @@ st.markdown(
     ### Gestión de ficheros
     Permitirá cargar nuevos ficheros y almacenarlos internamente.
 
-    ### Visualización
+    ### Visualización de datos
     Permitirá visualizar los datos cargados así como realizar filtros sobre ellos 
     y la visualización de parámetros estadísticos y geográficos asociados a los mismos.
 
-    ### Saneamiento de datos
+    ### Calidad de datos
     Permitirá realizar algunas acciones sobre los datos en caso de problemas de calidad 
     como puedan ser valores que faltan, ya sea eliminándolos o rellenándolos 
     con alguna medida de tendencia central por ejemplo.
     
+    ### Chatbot de consulta
+    Permitirá realizar todo tipo de consultas a un chatbot.
+
 """
 )
