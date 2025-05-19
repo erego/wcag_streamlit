@@ -8,6 +8,7 @@ import os
 import sqlite3
 
 import streamlit as st
+import altair as alt
 import pandas as pd
 
 from data_api.data_operations import get_geocode, get_location_data, insert_location_db, get_fichero_db
@@ -221,8 +222,29 @@ if select_fichero:
         list_rows.append(row_dict)
 
     data_stacked = pd.DataFrame(list_rows)
+    
     data_stacked.set_index('Principles_Guidelines', inplace=True)
-    st.bar_chart(data_stacked)
+
+    # Creación del gráfico altair
+    data_stacked = data_stacked.melt(var_name="likert_scale", ignore_index=False)
+    if select_likert and select_likert == "De 3 puntos":
+        colors = ['#A6C8FF','#4B8BBE',"#8B6D5E"]
+    else:
+        colors = ['#A6C8FF','#4B8BBE',"#8B6D5E","#FFFF7E",'#FF9900']
+    chart = alt.Chart(data_stacked.reset_index()).mark_bar().encode(
+    x='Principles_Guidelines:N',
+    y='sum(value):Q',
+    color=alt.Color('likert_scale:N'),
+    ).properties(
+    height=400
+    ).configure_range(
+    category=alt.RangeScheme(colors)
+)
+
+    st.altair_chart(chart, theme=None, use_container_width=True)
+
+
+    #st.bar_chart(data_stacked, color=None)
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor máximo"], color=["#d2c5dc"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Valor mínimo"], color=["#e5e0b7"],)
     st.bar_chart(data_wcag_subtable_statistics, y=["Cardinalidad"], color=["#f9dfd6"],)
