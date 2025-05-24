@@ -59,7 +59,7 @@ def get_statistics_data(data_wcag_subtable):
     median_serie = data_wcag_subtable_statistics.median(axis = 0)
     median_serie.name = 'Mediana'
     std_serie = data_wcag_subtable_statistics.std(axis = 0)
-    std_serie.name = 'std'
+    std_serie.name = 'Desviación Estándar'
     result_statistics = pd.concat([total_valores_serie, valores_nulos_serie, 
                                    cardinalidad_serie, mean_serie, median_serie, std_serie, max_serie_locations, max_serie,
                                     min_serie_locations, min_serie], axis = 1) 
