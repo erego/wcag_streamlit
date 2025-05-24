@@ -186,15 +186,18 @@ if select_fichero:
 
     data_wcag_subtable_statistics = get_statistics_data(data_wcag_subtable)
     st.dataframe(data_wcag_subtable_statistics)
-
-
-    select_likert = st.selectbox("Elige la escala Likert a visualizar",["De 5 puntos", "De 3 puntos"],index=0)
-
     
     data_stacked = data_wcag_subtable.copy()
     data_stacked = data_stacked.dropna()
     data_stacked.drop('Sucess_Criterion', axis=1, inplace=True)
     data_stacked.set_index('Principles_Guidelines', inplace=True)
+
+    max_range_likert = data_stacked.max().max()
+
+    if max_range_likert == 5:
+        select_likert = st.sidebar.selectbox("Elige la escala Likert a visualizar",["De 5 puntos", "De 3 puntos"],index=0)
+    else:
+        select_likert = st.sidebar.selectbox("Elige la escala Likert a visualizar",["De 3 puntos"],index=0)
 
     list_rows = []
     for index, value in data_stacked.iterrows():
