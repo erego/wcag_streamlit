@@ -200,6 +200,7 @@ if select_fichero:
         select_likert = st.sidebar.selectbox("Elige la escala Likert a visualizar",["De 3 puntos"],index=0)
 
     list_rows = []
+    
     for index, value in data_stacked.iterrows():
         series_valor = value.value_counts().sort_index()
         row_dict = {}
@@ -228,6 +229,21 @@ if select_fichero:
     
     data_stacked.set_index('Principles_Guidelines', inplace=True)
 
+    suma_total = data_stacked.sum(axis=1)
+    suma_total.name = 'Total valores'
+    data_stacked_percentage = pd.concat([data_stacked, suma_total], axis = 1)
+    if select_likert and select_likert == "De 3 puntos":
+        data_stacked_percentage.insert(1,"% NC", (data_stacked_percentage["1: No conseguido"] * 100)/data_stacked_percentage["Total valores"]) 
+        data_stacked_percentage.insert(3,"% NA", (data_stacked_percentage["2: No aplicable"] * 100)/data_stacked_percentage["Total valores"]) 
+        data_stacked_percentage.insert(5,"% TC", (data_stacked_percentage["3: Totalmente conseguido"] * 100)/data_stacked_percentage["Total valores"]) 
+    else:
+        data_stacked_percentage.insert(1,"% NC", (data_stacked_percentage["1: No conseguido"] * 100)/data_stacked_percentage["Total valores"]) 
+        data_stacked_percentage.insert(3,"% PC", (data_stacked_percentage["2: Parcialmente conseguido"] * 100)/data_stacked_percentage["Total valores"]) 
+        data_stacked_percentage.insert(5,"% NA", (data_stacked_percentage["3: No aplicable"] * 100)/data_stacked_percentage["Total valores"])      
+        data_stacked_percentage.insert(7,"% AC", (data_stacked_percentage["4: Ampliamente conseguido"] * 100)/data_stacked_percentage["Total valores"]) 
+        data_stacked_percentage.insert(9,"% TC", (data_stacked_percentage["5: Totalmente conseguido"] * 100)/data_stacked_percentage["Total valores"])          
+    st.dataframe(data_stacked_percentage)
+
     # Creación del gráfico altair
     data_stacked = data_stacked.melt(var_name="likert_scale", ignore_index=False)
     if select_likert and select_likert == "De 3 puntos":
@@ -246,11 +262,28 @@ if select_fichero:
 
     st.altair_chart(chart, theme=None, use_container_width=True)
 
-
     #st.bar_chart(data_stacked, color=None)
-    st.bar_chart(data_wcag_subtable_statistics, y=["Valor máximo"], color=["#d2c5dc"],)
-    st.bar_chart(data_wcag_subtable_statistics, y=["Valor mínimo"], color=["#e5e0b7"],)
-    st.bar_chart(data_wcag_subtable_statistics, y=["Cardinalidad"], color=["#f9dfd6"],)
+    #st.bar_chart(data_wcag_subtable_statistics, y=["Valor máximo"], color=["#d2c5dc"],)
+    chart=alt.Chart(data_wcag_subtable_statistics.reset_index()).mark_bar().encode(
+        x='index', y="Valor máximo", tooltip=['index', 'Mejores localizaciones']).configure_mark(
+            color='#d2c5dc')
+    
+    st.altair_chart(chart, theme=None, use_container_width=True)
+    #st.bar_chart(data_wcag_subtable_statistics, y=["Valor mínimo"], color=["#e5e0b7"],)
+
+    chart=alt.Chart(data_wcag_subtable_statistics.reset_index()).mark_bar().encode(
+        x='index', y="Valor mínimo", tooltip=['index', 'Peores localizaciones']).configure_mark(
+            color='#e5e0b7')
+    st.altair_chart(chart, theme=None, use_container_width=True)
+
+    #st.bar_chart(data_wcag_subtable_statistics, y=["Cardinalidad"], color=["#f9dfd6"],)
+
+    chart=alt.Chart(data_wcag_subtable_statistics.reset_index()).mark_bar().encode(
+        x='index', y="Cardinalidad", tooltip=['index']).configure_mark(
+            color='#f9dfd6')
+    st.altair_chart(chart, theme=None, use_container_width=True)
+
+
 
     dataframe_geo = pd.DataFrame({
         'location' : selected_locations,
