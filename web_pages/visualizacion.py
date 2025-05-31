@@ -185,7 +185,8 @@ if select_fichero:
     )
 
     data_wcag_subtable_statistics = get_statistics_data(data_wcag_subtable)
-    st.dataframe(data_wcag_subtable_statistics)
+    st.dataframe(data_wcag_subtable_statistics.style.format({"Media": "{:.2f}", "Mediana": "{:.0f}", 
+                                                             "Desviación Estándar": "{:.2f}", "Valor máximo": "{:.0f}","Valor mínimo": "{:.0f}"}))
     
     data_stacked = data_wcag_subtable.copy()
     data_stacked = data_stacked.dropna()
@@ -241,8 +242,14 @@ if select_fichero:
         data_stacked_percentage.insert(3,"% PC", (data_stacked_percentage["2: Parcialmente conseguido"] * 100)/data_stacked_percentage["Total valores"]) 
         data_stacked_percentage.insert(5,"% NA", (data_stacked_percentage["3: No aplicable"] * 100)/data_stacked_percentage["Total valores"])      
         data_stacked_percentage.insert(7,"% AC", (data_stacked_percentage["4: Ampliamente conseguido"] * 100)/data_stacked_percentage["Total valores"]) 
-        data_stacked_percentage.insert(9,"% TC", (data_stacked_percentage["5: Totalmente conseguido"] * 100)/data_stacked_percentage["Total valores"])          
-    st.dataframe(data_stacked_percentage)
+        data_stacked_percentage.insert(9,"% TC", (data_stacked_percentage["5: Totalmente conseguido"] * 100)/data_stacked_percentage["Total valores"])
+
+    if select_likert and select_likert == "De 3 puntos":
+        st.dataframe(data_stacked_percentage.style.format({"% NC": "{:.2f}", "% NA": "{:.20f}", 
+                                                             "% TC": "{:.2f}"}) )
+    else:         
+        st.dataframe(data_stacked_percentage.style.format({"% NC": "{:.2f}","% PC": "{:.2f}", "% NA": "{:.2f}", 
+                                                              "% AC": "{:.2f}","% TC": "{:.2f}"}))
 
     # Creación del gráfico altair
     data_stacked = data_stacked.melt(var_name="likert_scale", ignore_index=False)
@@ -282,8 +289,6 @@ if select_fichero:
         x='index', y="Cardinalidad", tooltip=['index']).configure_mark(
             color='#f9dfd6')
     st.altair_chart(chart, theme=None, use_container_width=True)
-
-
 
     dataframe_geo = pd.DataFrame({
         'location' : selected_locations,

@@ -209,15 +209,6 @@ def get_best_wcag_compability_rawfile(data_wcag:pd.DataFrame)-> str:
  
     return None
 
-
-def get_wcag_data_filtered(wcag_data: pd.DataFrame, version_to_filter: str):
-    """Función que filtra un pandas DataFrame teniendo en cuenta la versión a la que queremos ajustarlo
-
-    Args:
-        wcag_data (pd.DataFrame): pandas DataFrame a filtrar
-        version_to_filter (str): Versión que queremos usar de referencia para filtrar
-    """
-
 def get_principles(version_wcag:str, configs_wcag):
 
     """Dada una versión de wcag, busca en el conjunto de wcag del fichero
