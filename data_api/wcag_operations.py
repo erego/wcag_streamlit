@@ -48,12 +48,12 @@ def is_formattedfile_compatible_wcag_version(path_to_file:str, wcag_version:str)
     # Recorremos los criterios segun la configuración de esa versión a comprobar
     criterions_to_check = version_config_to_test['success_criterion']
 
-    leves_in_dataframe = get_levels_criterion_from_dataframe(data_wcag)
+    levels_in_dataframe = get_levels_criterion_from_dataframe(data_wcag)
 
     for criterion_to_check in criterions_to_check:
 
         level_to_check = get_level_from_criterion(wcag_version, config_versions_wcag, criterion_to_check)
-        if level_to_check not in leves_in_dataframe:
+        if level_to_check not in levels_in_dataframe:
             continue
 
         criterion_to_check=criterion_to_check.replace(":", "")
