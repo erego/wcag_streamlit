@@ -245,7 +245,7 @@ if select_fichero:
         data_stacked_percentage.insert(9,"% TC", (data_stacked_percentage["5: Totalmente conseguido"] * 100)/data_stacked_percentage["Total valores"])
 
     if select_likert and select_likert == "De 3 puntos":
-        st.dataframe(data_stacked_percentage.style.format({"% NC": "{:.2f}", "% NA": "{:.20f}", 
+        st.dataframe(data_stacked_percentage.style.format({"% NC": "{:.2f}", "% NA": "{:.2f}", 
                                                              "% TC": "{:.2f}"}) )
     else:         
         st.dataframe(data_stacked_percentage.style.format({"% NC": "{:.2f}","% PC": "{:.2f}", "% NA": "{:.2f}", 
