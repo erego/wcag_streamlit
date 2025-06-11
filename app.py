@@ -15,7 +15,7 @@ with col1:
     st.header("Dashboard de accesibilidad web de la UNED", anchor=False)
 
 with col2:
-    st.image("./static/logo_informatica.gif",width=220,  caption='Logo de la Escuela Técniica Superior de Ingeniería Informática de la UNED')
+    st.image("./static/logo_informatica.gif",width=220,  caption='Logo de la Escuela Técnica Superior de Ingeniería Informática de la UNED')
 
 
 pagina_inicio = st.Page("./web_pages/init.py", title= "Inicio")
