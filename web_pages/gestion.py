@@ -29,13 +29,15 @@ def get_config_toml_wcag():
         versions_wcag = config['wcag']
     return versions_wcag
 
-upload_file = st.file_uploader("Elige un fichero para subirlo a la aplicación")
 
-if upload_file is not None:
+with st.form("form_upload"):
+    upload_file = st.file_uploader("Elige un fichero para subirlo a la aplicación")
+    submit_upload_btn = st.form_submit_button('Upload File')
+    if submit_upload_btn and upload_file is not None:
 
-    with open(os.path.join("./data/raw/",upload_file.name),"wb") as f:
-        f.write(upload_file.getbuffer())
-    st.success("Fichero Almacenado")
+        with open(os.path.join("./data/raw/",upload_file.name),"wb") as f:
+            f.write(upload_file.getbuffer())
+        st.success("Fichero Almacenado")
 
 st.divider()
 
