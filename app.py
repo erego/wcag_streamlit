@@ -12,10 +12,14 @@ st.set_page_config(
 col1, col2 = st.columns([0.7, 0.3])
 
 with col1:
-    st.header("Dashboard de accesibilidad web de la UNED", anchor=False)
+    st.title("Dashboard de accesibilidad web de la UNED", anchor=False)
 
 with col2:
-    st.image("./static/logo_informatica.gif",width=220,  caption='Logo de la Escuela Técnica Superior de Ingeniería Informática de la UNED')
+
+    # st.image("./static/logo_informatica.gif", width=220)
+
+    st.html("<img src='https://www.uned.es/universidad/.imaging/mte/site-facultades-theme/220/dam/recursos-corporativos/logotipos/facultades-escuelas/logo_informatica.gif/jcr:content/logo_informatica.gif' alt='Logo de la Escuela Técnica Superior de Ingeniería Informática de la UNED'>")
+    st.html('<p style="color: black;">Logo de la Escuela Técnica Superior de Ingeniería Informática de la UNED.</p>')
 
 
 pagina_inicio = st.Page("./web_pages/init.py", title= "Inicio")

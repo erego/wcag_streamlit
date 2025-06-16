@@ -7,7 +7,7 @@ from hugchat import hugchat
 from hugchat.login import Login
 
 
-st.subheader("Chatbot de consulta")
+st.header("Chatbot de consulta")
 st.sidebar.subheader("Chatbot de consulta", anchor=False)
 
 

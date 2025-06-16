@@ -16,7 +16,7 @@ from data_api.data_operations import get_statistics_data
 from data_api.wcag_operations import get_config_toml_wcag, get_principles, get_success_criterion
 from data_api.wcag_operations import get_guidelines, get_levels_criterion_from_dataframe
 
-st.subheader("Visualización de datos", anchor=False)
+st.header("Visualización de datos", anchor=False)
 st.sidebar.header("Visualización de datos")
 st.write(
     """Esta página permite filtrar y visualizar la tabla de WCAG de ayuntamientos"""

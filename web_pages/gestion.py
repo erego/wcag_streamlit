@@ -17,8 +17,9 @@ from data_api.wcag_operations import get_best_wcag_compability_rawfile
 from data_api.wcag_operations import get_principles, get_success_criterion, get_guidelines
 from data_api.data_operations import insert_fichero_db, delete_fichero_db
 
-st.subheader("Gestión de ficheros", anchor=False)
-st.sidebar.header("Gestión de ficheros")
+st.header("Gestión de ficheros", anchor=False)
+st.subheader("Subida de ficheros", anchor=False)
+st.sidebar.header("Gestión de ficheros", anchor=False)
 
 # Obtener las configuraciones de las versiones wcag soportadas
 @st.cache_resource
