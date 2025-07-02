@@ -1,70 +1,74 @@
 """
-    Páginadel chatbot de la aplicación dashboard de la UNED que permite 
+    Página del chatbot de la aplicación dashboard de la UNED que permite 
     realizar preguntas al chatbot de huggingface
 """
+
+from groq import Groq
 import streamlit as st
-from hugchat import hugchat
-from hugchat.login import Login
+
+client = Groq(api_key= st.secrets.groq_cloud['api_key'])
 
 
 st.header("Chatbot de consulta", anchor=False)
 st.sidebar.subheader("Chatbot de consulta", anchor=False)
+# st.sidebar.image("https://cdn-icons-png.flaticon.com/512/4712/4712039.png", width=100)
+#st.sidebar.markdown("### 🧠 Chat Memory")
+#memory_enabled = st.sidebar.toggle("Enable Chat Memory", value=True)
+#if memory_enabled:
+#    st.sidebar.markdown("Chat memory is enabled. Your conversation history will be saved.")
+#st.sidebar.markdown("Built using **llama-3.3-70b-versatile** via **Groq API**")
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 
-# Function for generating LLM response
-def generate_response(prompt_input, email, passwd):
-    """
-    Función para generar la respuesta del chatnot
-    Args:
-        prompt_input (_type_): prompt introducido por el usuario
-        email (_type_): correo del usuario
-        passwd (_type_): clave del usuario
+#st.title("💬 AI Assistant")
+st.caption("Realiza tu pregunta al asistente de IA")
 
-    Returns:
-        _type_: _description_
-    """
-    # Hugging Face Login
-    sign = Login(email, passwd)
-    cookies = sign.login()
-    # Create ChatBot
-    chatbot = hugchat.ChatBot(cookies=cookies.get_dict())
-    return chatbot.chat(prompt_input)
+if st.session_state.chat_history:
+    chat_text = "\n\n".join(
+        [f"User: {msg['content']}" if msg["role"] == "user" else f"Assistant: {msg['content']}" for msg in st.session_state.chat_history]
+    )
 
-# Hugging Face Credentials
-with st.sidebar:
-    st.title('🤗💬 HugChat')
-    if ('email' in st.secrets.hugchat) and ('pass' in st.secrets.hugchat):
-        st.success('HuggingFace Login credentials already provided!', icon='✅')
-        hf_email = st.secrets.hugchat['email']
-        hf_pass = st.secrets.hugchat['pass']
+    st.download_button(
+        label="💾 Download Chat History",
+        data=chat_text,
+        file_name="chat_history.txt",
+        mime="text/plain",
+    )
+
+
+for msg in st.session_state.chat_history:
+    if msg["role"] == "user":
+        st.markdown(f"<div class='stChatMessage user'>🧑‍💻: {msg['content']}</div>", unsafe_allow_html=True)
     else:
-        hf_email = st.text_input('Enter E-mail:', type='password')
-        hf_pass = st.text_input('Enter password:', type='password')
-        if not (hf_email and hf_pass):
-            st.warning('Please enter your credentials!', icon='⚠️')
-        else:
-            st.success('Proceed to entering your prompt message!', icon='👉')
+        st.markdown(f"<div class='stChatMessage bot'>🤖: {msg['content']}</div>", unsafe_allow_html=True)
 
-# Store LLM generated responses
-if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "¿Cómo puedo ayudarle?"}]
+with st.form("chat_form", clear_on_submit=True):
+    user_input = st.text_input("Escribe tu mensaje:", key="input", placeholder="Escribe tu mensaje")
+    submitted = st.form_submit_button("Enviar pregunta")
 
-# Display chat messages
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
+if submitted and user_input:
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
 
-# User-provided prompt
-if prompt := st.chat_input(disabled=not (hf_email and hf_pass)):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.write(prompt)
+ 
+    #if memory_enabled:
+    messages = [{"role": "system", "content": "You are an Ai assistant(LLM)"}]
+    messages += st.session_state.chat_history
+    messages.append({"role": "user", "content": user_input})
+    #else:
+    #    messages = [
+    #        {"role": "system", "content": "You are an Ai assistant(LLM)"},
+    #        {"role": "user", "content": user_input}
+    #    ]
 
-# Generate a new response if last message is not from assistant
-if st.session_state.messages[-1]["role"] != "assistant":
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = generate_response(prompt, hf_email, hf_pass)
-            st.write(response)
-    message = {"role": "assistant", "content": response}
-    st.session_state.messages.append(message)
+    response = client.chat.completions.create(
+        messages=messages,
+        model="llama-3.3-70b-versatile",
+    )
+
+    bot_reply = response.choices[0].message.content
+
+    st.session_state.chat_history.append({"role": "assistant", "content": bot_reply})
+
+    st.rerun()
